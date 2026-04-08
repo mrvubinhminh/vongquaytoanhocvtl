@@ -525,7 +525,7 @@
               </header>
 
               {/* Main Content */}
-              <main className={`flex-1 relative z-10 flex ${appState === 'presentation' ? 'flex-col lg:flex-row gap-8 items-stretch' : 'flex-col items-center justify-center'} p-6 md:p-10`}>
+              <main className={`flex-1 relative z-10 flex ${appState === 'presentation' ? 'flex-col lg:flex-row gap-8 items-stretch' : 'flex-col items-center justify-center'} p-4 md:p-6 lg:p-8`}>
                 
                 {appState === 'presentation' ? (
                   <>
@@ -618,24 +618,24 @@
                   </>
                 ) : appState !== 'completed' && (
                   <>
-                    <div className="w-full max-w-[98%] xl:max-w-[95%] 2xl:max-w-[90%] flex-1 min-h-[60vh] bg-slate-900 border-2 border-slate-800 rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col items-center justify-center mb-8 ring-1 ring-white/10">
+                    <div className="w-full max-w-[98%] xl:max-w-[95%] 2xl:max-w-[90%] flex-1 min-h-[65vh] lg:min-h-[70vh] bg-slate-900 border-2 border-slate-800 rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col items-center justify-center mb-6 ring-1 ring-white/10">
                       {appState === 'idle' && (
                         <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center">
-                          {/* Ảnh nền Vườn Hoa Hướng Dương */}
-                          <div className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-[30s] hover:scale-110" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1597848212624-a19eb35e2651?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')" }}></div>
+                          {/* Ảnh nền Vườn Hoa Hướng Dương siêu đẹp từ Unsplash */}
+                          <div className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-[30s] hover:scale-110" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')" }}></div>
                           {/* Lớp phủ tối để làm nổi bật chữ */}
-                          <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-[2px]"></div>
+                          <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-[1px]"></div>
                           
-                          <div className="relative z-20 text-center px-10 max-w-6xl animate-in fade-in zoom-in duration-1000 flex flex-col items-center">
+                          <div className="relative z-20 text-center px-10 w-full flex flex-col items-center justify-center h-full">
                             <h2 
-                              className="text-5xl md:text-7xl lg:text-8xl font-black text-yellow-400 mb-12 leading-snug tracking-wide"
-                              style={{ textShadow: '3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 0px 15px 30px rgba(0,0,0,0.9)' }}
+                              className="text-3xl md:text-5xl lg:text-6xl font-bold text-yellow-400 mb-10 leading-snug tracking-wide max-w-4xl mx-auto"
+                              style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0px 10px 20px rgba(0,0,0,0.8)' }}
                             >
                               "{idleQuote}"
                             </h2>
-                            <div className="inline-flex items-center gap-4 px-10 py-5 rounded-full bg-slate-900/60 border border-white/30 backdrop-blur-md shadow-[0_0_40px_rgba(0,0,0,0.6)] animate-pulse">
-                              <div className="w-5 h-5 rounded-full bg-green-400 animate-ping"></div>
-                              <p className="text-2xl md:text-3xl lg:text-4xl text-white font-bold tracking-widest uppercase">Sẵn Sàng Quay Số</p>
+                            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-slate-900/60 border border-white/30 backdrop-blur-md shadow-[0_0_30px_rgba(0,0,0,0.6)] animate-pulse">
+                              <div className="w-4 h-4 rounded-full bg-green-400 animate-ping"></div>
+                              <p className="text-xl md:text-2xl text-white font-bold tracking-widest uppercase">Sẵn Sàng Quay Số</p>
                             </div>
                           </div>
                         </div>
@@ -660,47 +660,48 @@
                       )}
                     </div>
 
-                    <div className="w-full max-w-[98%] xl:max-w-[95%] 2xl:max-w-[90%] bg-slate-900/80 backdrop-blur-md p-8 rounded-3xl border border-slate-800 flex flex-col md:flex-row items-center gap-8 justify-between">
-                      <div className="flex gap-10 text-center md:text-left">
+                    {/* Thanh công cụ đã được thu gọn lại */}
+                    <div className="w-full max-w-[98%] xl:max-w-[95%] 2xl:max-w-[90%] bg-slate-900/80 backdrop-blur-md p-4 md:p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-center gap-4 md:gap-6 justify-between">
+                      <div className="flex gap-8 text-center md:text-left">
                         <div>
-                          <div className="text-lg md:text-xl text-slate-400 mb-2">Tổng học sinh</div>
-                          <div className="text-4xl md:text-5xl font-bold text-blue-400">{settings.students} <span className="text-2xl text-slate-600 font-normal">HS</span></div>
+                          <div className="text-base md:text-lg text-slate-400 mb-1">Tổng học sinh</div>
+                          <div className="text-3xl md:text-4xl font-bold text-blue-400">{settings.students} <span className="text-lg text-slate-600 font-normal">HS</span></div>
                         </div>
                         <div className="w-px bg-slate-700 hidden md:block"></div>
                         <div>
-                          <div className="text-lg md:text-xl text-slate-400 mb-2">Câu hỏi còn lại</div>
-                          <div className="text-4xl md:text-5xl font-bold text-yellow-400">{poolQuestions.length} <span className="text-2xl text-slate-600 font-normal">Câu</span></div>
+                          <div className="text-base md:text-lg text-slate-400 mb-1">Câu hỏi còn lại</div>
+                          <div className="text-3xl md:text-4xl font-bold text-yellow-400">{poolQuestions.length} <span className="text-lg text-slate-600 font-normal">Câu</span></div>
                         </div>
                       </div>
 
-                      <div className="flex flex-col sm:flex-row items-center gap-6 w-full md:w-auto">
-                        <div className="relative w-full sm:w-80">
+                      <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                        <div className="relative w-full sm:w-64">
                           <select 
                             value={selectedMode}
                             onChange={(e) => setSelectedMode(e.target.value)}
                             disabled={appState === 'spinning'}
-                            className="w-full appearance-none bg-slate-800 border-2 border-slate-700 text-slate-200 py-5 pl-6 pr-12 text-xl md:text-2xl rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/50 disabled:opacity-50 cursor-pointer"
+                            className="w-full appearance-none bg-slate-800 border border-slate-700 text-slate-200 py-3 pl-4 pr-10 text-lg rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 cursor-pointer"
                           >
                             {MODES.map(m => (
                               <option key={m.id} value={m.id}>{m.name}</option>
                             ))}
                           </select>
-                          <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 scale-150">▼</div>
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
                         </div>
 
                         <button
                           onClick={handleSpin}
                           disabled={appState === 'spinning' || poolQuestions.length === 0}
-                          className={`w-full sm:w-auto px-12 py-5 md:py-6 rounded-2xl font-black text-2xl md:text-3xl uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-4
+                          className={`w-full sm:w-auto px-8 py-3 md:py-4 rounded-xl font-black text-xl md:text-2xl uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3
                             ${appState === 'spinning' 
                               ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
                               : poolQuestions.length === 0
                                 ? 'bg-red-900/50 text-red-500 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-[0_0_30px_rgba(37,99,235,0.4)] hover:shadow-[0_0_50px_rgba(37,99,235,0.6)] hover:-translate-y-2'
+                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] hover:-translate-y-1'
                             }
                           `}
                         >
-                          {appState === 'spinning' ? <>Đang quay...</> : poolQuestions.length === 0 ? <>Hết câu hỏi</> : <><div className="scale-150"><IconPlay /></div> Quay Số</>}
+                          {appState === 'spinning' ? <>Đang quay...</> : poolQuestions.length === 0 ? <>Hết câu hỏi</> : <><IconPlay /> Quay Số</>}
                         </button>
                       </div>
                     </div>
