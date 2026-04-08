@@ -110,12 +110,33 @@
 
         /* CSS CHO IN ẤN (A4) */
         @media print {
-            @page { margin: 10mm; size: A4 portrait; }
+            @page { margin: 12mm; size: A4 portrait; }
             .no-print { display: none !important; }
             .hide-on-print { display: none !important; }
             body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
             .print-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
+            
+            /* Cấu hình Footer in lặp lại mọi trang */
+            .print-footer-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                font-size: 10pt;
+                color: #555;
+                background-color: white;
+                padding-top: 10px;
+                border-top: 1px solid #94a3b8;
+                display: flex;
+                justify-content: space-between;
+            }
+            .print-content-wrapper {
+                padding-bottom: 25mm; /* Nhường chỗ cho Footer */
+            }
         }
+        
+        .print-footer-container { display: none; }
+        @media print { .print-footer-container { display: flex; } }
     </style>
 </head>
 <body>
@@ -373,6 +394,9 @@
           // Print States
           const [printFont, setPrintFont] = useState('font-roboto');
           const [printLines, setPrintLines] = useState(2);
+          const [printHeaderInfo, setPrintHeaderInfo] = useState('Thầy Vũ Tiến Lực - Trường THPT Nguyễn Hữu Cảnh - TPHCM');
+          const [showKeyKnowledge, setShowKeyKnowledge] = useState(false);
+          const [currentTime, setCurrentTime] = useState('');
 
           // State Thư viện & Câu hỏi đầy đủ cho In ấn
           const [allQuestions, setAllQuestions] = useState([]);
@@ -437,13 +461,21 @@
             return () => window.removeEventListener('keydown', handleKeyDown);
           }, []);
 
+          // Cập nhật giờ khi mở trang in
+          useEffect(() => {
+             if (showPrintPreview) {
+                const now = new Date();
+                const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} - ${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+                setCurrentTime(timeString);
+             }
+          }, [showPrintPreview]);
+
           const initPools = useCallback(async (studentCount, questionCount, sheetId) => {
             setPoolStudents(Array.from({ length: studentCount }, (_, i) => i + 1));
             
             if (sheetId) {
               try {
                 let actualId = sheetId.trim();
-                // Tự động lấy ID nếu người dùng lỡ dán cả đường link
                 if (actualId.includes('/d/')) {
                   const match = actualId.match(/\/d\/([a-zA-Z0-9-_]+)/);
                   if (match) actualId = match[1];
@@ -456,7 +488,6 @@
                 
                 const text = await res.text();
                 
-                // Trả về trang đăng nhập HTML -> lỗi chưa share public
                 if (text.trim().startsWith('<') && text.toLowerCase().includes('html')) {
                   throw new Error("Google Sheet của bạn chưa được cấp quyền! Vui lòng chọn 'Bất kỳ ai có liên kết' (Anyone with the link) ở mục Chia sẻ.");
                 }
@@ -467,7 +498,6 @@
                 let startIndex = (data[0] && data[0][0] && data[0][0].toLowerCase().includes('câu')) ? 1 : 0;
                 const qs = [];
                 for(let i = startIndex; i < data.length; i++) {
-                   // Bỏ qua các hàng rỗng
                    if(data[i] && data[i][0] && data[i][0].toString().trim() !== '') {
                        qs.push({ 
                            id: i + 1 - startIndex, 
@@ -515,7 +545,6 @@
             const q = parseInt(localSettings.questions || 20);
             let sId = (localSettings.sheetId || '').trim();
             
-            // Extract ID from full URL automatically
             if (sId.includes('/d/')) {
                 const match = sId.match(/\/d\/([a-zA-Z0-9-_]+)/);
                 if (match) sId = match[1];
@@ -523,7 +552,7 @@
 
             if (s > 0 && q > 0) {
               setSettings({ ...localSettings, students: s, questions: q, sheetId: sId });
-              setLocalSettings({ ...localSettings, sheetId: sId }); // Update local setting with cleaned ID
+              setLocalSettings({ ...localSettings, sheetId: sId }); 
               setShowSettings(false);
             }
           };
@@ -632,7 +661,6 @@
           const handlePresentQuestionFirst = () => {
              if (poolQuestions.length === 0) return;
              
-             // Bốc câu hỏi ngẫu nhiên và Xoá luôn khỏi pool
              const qIdx = Math.floor(Math.random() * poolQuestions.length);
              const targetQuestion = poolQuestions[qIdx];
              const newPoolQuestions = poolQuestions.filter((_, i) => i !== qIdx);
@@ -1347,11 +1375,11 @@
               {/* MÀN HÌNH XEM TRƯỚC IN ẤN PHIẾU HỌC TẬP (A4) */}
               {showPrintPreview && (
                 <div className="min-h-screen bg-slate-800 print:bg-white pb-12 print:p-0 print:block">
-                  <div className="no-print bg-slate-900 border-b border-slate-700 p-4 sticky top-0 z-50 flex justify-between items-center shadow-xl">
-                     <h2 className="text-xl font-bold text-white flex items-center gap-2"><IconPrint /> Chế độ In Phiếu Học Tập</h2>
+                  <div className="no-print bg-slate-900 border-b border-slate-700 p-4 sticky top-0 z-50 flex flex-col md:flex-row gap-4 justify-between items-center shadow-xl">
+                     <h2 className="text-xl font-bold text-white flex items-center gap-2 shrink-0"><IconPrint /> In Phiếu Học Tập</h2>
                      
                      {/* Bảng điều khiển cấu hình in */}
-                     <div className="flex items-center gap-4 bg-slate-800 px-4 py-2 rounded-lg border border-slate-700">
+                     <div className="flex flex-wrap items-center gap-4 bg-slate-800 px-4 py-3 rounded-lg border border-slate-700 w-full mb-4">
                         <div className="flex items-center gap-2">
                            <label className="text-slate-300 text-sm font-semibold">Font chữ:</label>
                            <select 
@@ -1367,7 +1395,7 @@
                               <option value="font-merriweather">Merriweather (Có chân)</option>
                            </select>
                         </div>
-                        <div className="w-px h-6 bg-slate-700"></div>
+                        <div className="w-px h-6 bg-slate-700 hidden md:block"></div>
                         <div className="flex items-center gap-2">
                            <label className="text-slate-300 text-sm font-semibold">Dòng kẻ làm bài:</label>
                            <input 
@@ -1378,18 +1406,40 @@
                               className="w-16 bg-slate-900 text-white border border-slate-600 rounded px-2 py-1 text-sm outline-none focus:border-blue-500 text-center"
                            />
                         </div>
+                        <div className="w-px h-6 bg-slate-700 hidden md:block"></div>
+                        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowKeyKnowledge(!showKeyKnowledge)}>
+                           <input type="checkbox" checked={showKeyKnowledge} readOnly className="w-4 h-4 cursor-pointer" />
+                           <span className="text-slate-300 text-sm font-semibold select-none">Kiến thức trọng tâm</span>
+                        </div>
+                        <div className="w-full h-px bg-slate-700 my-1 md:hidden"></div>
+                        <div className="flex items-center gap-2 flex-1 min-w-[250px]">
+                           <label className="text-slate-300 text-sm font-semibold whitespace-nowrap">Tiêu đề phụ:</label>
+                           <input 
+                              type="text" 
+                              value={printHeaderInfo} 
+                              onChange={(e) => setPrintHeaderInfo(e.target.value)}
+                              className="flex-1 bg-slate-900 text-white border border-slate-600 rounded px-2 py-1 text-sm outline-none focus:border-blue-500"
+                              placeholder="Để trống để ẩn..."
+                           />
+                        </div>
                      </div>
 
-                     <div className="flex gap-4">
+                     <div className="flex gap-4 shrink-0">
                         <button onClick={() => window.print()} className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-lg hover:scale-105 transition-all"><IconPrint /> In Phiếu (Ctrl+P)</button>
                         <button onClick={() => setShowPrintPreview(false)} className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold flex items-center gap-2 shadow-lg hover:scale-105 transition-all"><IconX /> Đóng</button>
                      </div>
                   </div>
 
                   {/* A4 Paper Container */}
-                  <div className={`mx-auto mt-8 bg-white text-black p-[20mm] print:p-[10mm] shadow-2xl print:shadow-none w-[210mm] min-h-[297mm] print:w-full print:max-w-full print:min-h-0 print:m-0 box-border print:block ${printFont}`}>
-                     <div className="text-center mb-8 border-b-2 border-black pb-4">
-                        <h1 className="text-2xl font-bold uppercase mb-4 tracking-widest">Phiếu Học Tập</h1>
+                  <div className={`mx-auto mt-2 bg-white text-black p-[20mm] print:p-0 shadow-2xl print:shadow-none w-[210mm] min-h-[297mm] print:w-full print:max-w-full print:min-h-0 print:m-0 box-border print:block print-content-container relative ${printFont}`}>
+                     
+                     <div className="text-center mb-6 border-b-[3px] border-black pb-4">
+                        {printHeaderInfo.trim() !== '' && (
+                           <div className="text-left text-[11pt] font-semibold italic mb-2">
+                              {printHeaderInfo}
+                           </div>
+                        )}
+                        <h1 className="text-2xl font-bold uppercase mb-4 tracking-widest mt-2">Phiếu Học Tập</h1>
                         <div className="flex justify-between items-end text-base font-semibold w-full px-2">
                            <div className="flex gap-2 w-[45%]">
                               <span className="whitespace-nowrap">Chủ đề:</span>
@@ -1404,6 +1454,20 @@
                         </div>
                      </div>
 
+                     {showKeyKnowledge && (
+                        <div className="mb-8 w-full text-left">
+                           <h3 className="text-[13pt] font-bold mb-2 uppercase border-l-4 border-black pl-2">Kiến Thức Trọng Tâm</h3>
+                           <div className="flex flex-col gap-0 mt-2">
+                              <div className="border-b border-dotted border-gray-600 h-8 w-full"></div>
+                              <div className="border-b border-dotted border-gray-600 h-8 w-full"></div>
+                              <div className="border-b border-dotted border-gray-600 h-8 w-full"></div>
+                              <div className="border-b border-dotted border-gray-600 h-8 w-full"></div>
+                           </div>
+                        </div>
+                     )}
+
+                     {showKeyKnowledge && <h3 className="text-[13pt] font-bold mb-4 uppercase border-l-4 border-black pl-2 text-left">Bài Tập</h3>}
+                     
                      <div className="grid grid-cols-2 gap-x-6 gap-y-8 text-[12pt] print:text-[12pt] w-full max-w-full">
                         {allQuestions.map(q => (
                            <div key={q.id} className="print-break-inside-avoid text-left break-inside-avoid w-full overflow-hidden">
@@ -1411,7 +1475,6 @@
                                  <span className="font-bold">Câu {q.id}: </span>
                                  <span className="font-normal"><MathText text={q.q} /></span>
                               </div>
-                              {/* Tự động render số dòng kẻ chấm mờ theo cấu hình */}
                               <div className="flex flex-col gap-0 mt-2">
                                  {Array.from({length: printLines}).map((_, i) => (
                                     <div key={i} className="border-b border-dotted border-gray-500 h-7 w-full"></div>
@@ -1419,6 +1482,11 @@
                               </div>
                            </div>
                         ))}
+                     </div>
+
+                     <div className="print-footer-element">
+                         <span>In lúc: {currentTime}</span>
+                         <span>Tài liệu: {printHeaderInfo || 'Phiếu Bài Tập'}</span>
                      </div>
                   </div>
                 </div>
