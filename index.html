@@ -132,21 +132,16 @@
           { id: 'fakeout', name: '7. Cú lừa (Dừng & quay tiếp)' },
         ];
 
-        const CUTE_BOXES = [
-          { id: 1, icon: '🦄', color: 'from-pink-400 to-purple-500', name: 'Kỳ Lân Phép Thuật' },
-          { id: 2, icon: '🦖', color: 'from-green-400 to-emerald-600', name: 'Khủng Long Xanh' },
-          { id: 3, icon: '🦁', color: 'from-yellow-400 to-orange-500', name: 'Sư Tử Dũng Mãnh' },
-          { id: 4, icon: '🐰', color: 'from-blue-300 to-indigo-500', name: 'Thỏ Trắng Đáng Yêu' },
-          { id: 5, icon: '🐼', color: 'from-slate-600 to-slate-800', name: 'Gấu Trúc Tròn Vo' },
-          { id: 6, icon: '🦊', color: 'from-orange-400 to-red-500', name: 'Cáo Nhỏ Tinh Nghịch' },
-        ];
-
-        const FUNNY_GIFTS = [
-          "Trình diễn một điệu nhảy tự do trong 10 giây 🕺",
-          "Kể một câu chuyện cười cho cả lớp nghe 🤣",
-          "Hát một đoạn điệp khúc bài hát yêu thích 🎤",
-          "Làm mặt xấu/kì cục để lớp chụp ảnh dìm 🤪",
-          "Đứng lên ngồi xuống 5 lần để rèn luyện sức khoẻ 💪"
+        // DANH SÁCH 8 PHẦN QUÀ HIỂN THỊ ĐẦY ĐỦ TRÊN MÀN HÌNH
+        const ALL_GIFTS = [
+          { id: 0, text: "1 ĐIỂM CỘNG TOÁN", icon: "🎁", color: "from-pink-400 to-rose-500" },
+          { id: 1, text: "3 ĐIỂM CỘNG TOÁN", icon: "🌟", color: "from-yellow-400 to-orange-500" },
+          { id: 2, text: "1 TRÀNG VỖ TAY", icon: "👏", color: "from-blue-400 to-cyan-500" },
+          { id: 3, text: "NHẢY TỰ DO 10 GIÂY", icon: "🕺", color: "from-purple-400 to-indigo-500" },
+          { id: 4, text: "KỂ 1 CHUYỆN CƯỜI", icon: "🤣", color: "from-green-400 to-emerald-500" },
+          { id: 5, text: "HÁT 1 ĐIỆP KHÚC", icon: "🎤", color: "from-red-400 to-rose-600" },
+          { id: 6, text: "LÀM MẶT XẤU CHỤP ẢNH", icon: "🤪", color: "from-teal-400 to-green-600" },
+          { id: 7, text: "THỤT DẦU 5 LẦN", icon: "💪", color: "from-orange-400 to-amber-600" },
         ];
 
         const MOTIVATIONAL_QUOTES = [
@@ -268,7 +263,7 @@
         function App() {
           const [settings, setSettings] = useState({ students: 48, questions: 20, sheetId: '' });
           
-          // State cho Modal Cài Đặt (Tách riêng để bấm Lưu mới Apply)
+          // State cho Modal Cài Đặt
           const [showSettings, setShowSettings] = useState(false);
           const [localSettings, setLocalSettings] = useState(settings);
           
@@ -278,7 +273,7 @@
             return saved ? JSON.parse(saved) : [];
           });
           const [saveForm, setSaveForm] = useState({ name: '', grade: '6' });
-          const [expandedGrades, setExpandedGrades] = useState({ '6': true }); // Mặc định mở khối 6
+          const [expandedGrades, setExpandedGrades] = useState({ '6': true });
 
           // State hiển thị
           const [poolStudents, setPoolStudents] = useState([]);
@@ -289,7 +284,8 @@
           const [showAnswer, setShowAnswer] = useState(false);
           const [showHint, setShowHint] = useState(false);
           
-          const [giftModal, setGiftModal] = useState({ show: false, status: 'menu', result: '', selectedBox: null });
+          // Cập nhật State cho Hộp Quà Bí Ẩn
+          const [giftModal, setGiftModal] = useState({ show: false, status: 'menu', activeIndex: -1, finalGift: null });
           const applauseAudioRef = useRef(null);
 
           const [idleQuote, setIdleQuote] = useState(MOTIVATIONAL_QUOTES[0]);
@@ -453,23 +449,43 @@
             }
           };
 
-          const handleOpenGift = async (boxInfo) => {
-            if (giftModal.status !== 'menu') return;
-            setGiftModal(prev => ({ ...prev, status: 'opening', selectedBox: boxInfo }));
-            await sleep(3000);
+          // LOGIC VÒNG QUAY PHẦN THƯỞNG MỚI
+          const handleSpinGift = async () => {
+            if (giftModal.status === 'spinning') return;
 
-            const rand = Math.random() * 10;
-            let finalGift = "";
-            if (rand < 3) finalGift = "🎁 1 ĐIỂM CỘNG MÔN TOÁN";
-            else if (rand < 4) finalGift = "🌟 3 ĐIỂM CỘNG MÔN TOÁN";
-            else if (rand < 5) { finalGift = "👏 1 TRÀNG PHÁO TAY TỪ LỚP"; playApplause(); }
-            else {
-              const funnyIdx = Math.floor(Math.random() * FUNNY_GIFTS.length);
-              finalGift = `🎭 ${FUNNY_GIFTS[funnyIdx]}`;
+            setGiftModal(prev => ({ ...prev, status: 'spinning', activeIndex: -1, finalGift: null }));
+            
+            const spinDuration = 4000; // Tổng thời gian quay: 4 giây
+            const startTime = Date.now();
+            let delay = 50;
+            let currentIndex = 0;
+            
+            // Chốt sẵn người thắng ngẫu nhiên ngay từ đầu
+            const winnerIndex = Math.floor(Math.random() * ALL_GIFTS.length);
+
+            // Vòng lặp chạy viền sáng quanh các hộp quà
+            while (Date.now() - startTime < spinDuration) {
+              currentIndex = (currentIndex + 1) % ALL_GIFTS.length;
+              setGiftModal(prev => ({ ...prev, activeIndex: currentIndex }));
+              await sleep(delay);
+              
+              const elapsed = Date.now() - startTime;
+              if (elapsed > 1500) delay += 10; // Bắt đầu chậm dần
+              if (elapsed > 2500) delay += 30; // Chậm rõ rệt hơn
             }
 
-            setGiftModal(prev => ({ ...prev, status: 'revealed', result: finalGift }));
-            confetti({ particleCount: 200, spread: 120, origin: { y: 0.5 } });
+            // Ép vòng quay nhích từ từ đến trúng ô đã chốt
+            while (currentIndex !== winnerIndex) {
+               currentIndex = (currentIndex + 1) % ALL_GIFTS.length;
+               setGiftModal(prev => ({ ...prev, activeIndex: currentIndex }));
+               await sleep(delay);
+               delay += 60; // Rất chậm trước khi dừng hẳn
+            }
+
+            // Hoàn tất, hiện hiệu ứng kết quả
+            setGiftModal(prev => ({ ...prev, status: 'revealed', activeIndex: winnerIndex, finalGift: ALL_GIFTS[winnerIndex] }));
+            confetti({ particleCount: 250, spread: 150, origin: { y: 0.5 } });
+            if (winnerIndex === 2) playApplause(); // Nếu vào ô Tràng Vỗ Tay thì phát âm thanh
           };
 
           return (
@@ -517,11 +533,11 @@
                 <div className="flex items-center gap-3">
                   <div className="hidden lg:block text-slate-500 text-base italic mr-4 border border-slate-800 px-4 py-2 rounded-full">Phím tắt: F (Toàn màn hình)</div>
                   <button 
-                    onClick={() => setGiftModal({ show: true, status: 'menu', result: '', selectedBox: null })}
+                    onClick={() => setGiftModal({ show: true, status: 'menu', activeIndex: -1, finalGift: null })}
                     className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-orange-500 hover:from-pink-500 hover:to-orange-400 text-white rounded-xl transition-all shadow-lg shadow-pink-500/20 hover:shadow-pink-500/40 hover:-translate-y-0.5"
                   >
                     <IconGift />
-                    <span className="hidden sm:inline font-bold text-lg">Hộp Quà</span>
+                    <span className="hidden sm:inline font-bold text-lg">Phần Thưởng</span>
                   </button>
                   <button 
                     onClick={() => setShowSettings(true)}
@@ -718,56 +734,63 @@
                 )}
               </main>
 
-              {/* MODAL HỘP QUÀ BÍ ẨN */}
+              {/* MODAL HỘP QUÀ BÍ ẨN - ĐÃ LÀM MỚI HIỂN THỊ DẠNG LƯỚI */}
               {giftModal.show && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-                  <button onClick={() => setGiftModal({ show: false, status: 'menu', result: '', selectedBox: null })} className="absolute top-8 right-8 p-4 bg-slate-800/50 hover:bg-slate-700 rounded-full text-white/50 hover:text-white transition-colors z-50">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:p-8 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+                  <button onClick={() => setGiftModal({ show: false, status: 'menu', activeIndex: -1, finalGift: null })} className="absolute top-4 right-4 lg:top-8 lg:right-8 p-4 bg-slate-800/50 hover:bg-slate-700 rounded-full text-white/50 hover:text-white transition-colors z-50">
                     <IconX />
                   </button>
 
-                  <div className="text-center w-full max-w-[90%] xl:max-w-[70%] flex flex-col items-center">
-                    {giftModal.status === 'menu' && (
-                      <div className="flex flex-col items-center animate-in zoom-in duration-500 w-full">
-                        <h2 className="text-5xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 mb-12 animate-bounce drop-shadow-lg">
-                          🌟 Các Con Chọn Hộp Nào? 🌟
-                        </h2>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-12 w-full px-4">
-                          {CUTE_BOXES.map(box => (
-                            <button key={box.id} onClick={() => handleOpenGift(box)} className={`bg-gradient-to-br ${box.color} p-10 md:p-16 rounded-[3rem] shadow-xl transform transition-all duration-300 hover:scale-110 hover:-translate-y-4 border-8 border-white/20 flex flex-col items-center justify-center gap-8 hover:shadow-[0_0_50px_rgba(255,255,255,0.4)] group`}>
-                              <span className="text-[100px] md:text-[150px] drop-shadow-xl group-hover:animate-bounce">{box.icon}</span>
-                              <span className="text-white font-black text-2xl md:text-4xl drop-shadow-md">{box.name}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {giftModal.status === 'opening' && giftModal.selectedBox && (
-                      <div className="flex flex-col items-center">
-                        <h2 className="text-6xl md:text-8xl font-black text-white mb-20 animate-pulse drop-shadow-2xl">
-                          Đang mở hộp {giftModal.selectedBox.name}...
-                        </h2>
-                        <div className="relative group scale-150 animate-intense-shake">
-                          <div className="absolute inset-0 rounded-full blur-3xl animate-pulse scale-150 opacity-60 bg-white"></div>
-                          <div className={`relative z-10 bg-gradient-to-br ${giftModal.selectedBox.color} p-20 md:p-24 rounded-[4rem] border-8 border-white/40 shadow-[0_0_100px_rgba(255,255,255,0.5)] flex items-center justify-center`}>
-                            <span className="text-[180px] md:text-[220px] drop-shadow-2xl">{giftModal.selectedBox.icon}</span>
+                  <div className="flex flex-col items-center justify-center w-full max-w-7xl h-full">
+                    <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 mb-8 animate-pulse drop-shadow-lg text-center uppercase tracking-wider">
+                      🎁 Vòng Quay May Mắn 🎁
+                    </h2>
+                    
+                    {/* Lưới 8 phần quà, 4 cột 2 hàng, xếp vừa vặn */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 w-full px-2 max-h-[60vh] lg:max-h-[70vh]">
+                      {ALL_GIFTS.map((gift, idx) => {
+                        const isActive = giftModal.activeIndex === idx;
+                        const isWinner = giftModal.status === 'revealed' && giftModal.activeIndex === idx;
+                        const isLoser = giftModal.status === 'revealed' && giftModal.activeIndex !== idx;
+                        
+                        return (
+                          <div 
+                            key={gift.id} 
+                            className={`flex flex-col items-center justify-center p-4 lg:p-8 rounded-[2rem] transition-all duration-150 border-4 shadow-xl 
+                              ${isActive ? 'scale-110 border-yellow-400 bg-white shadow-[0_0_50px_rgba(250,204,21,0.8)] z-10' : 'border-white/10 bg-slate-800/80 scale-100'}
+                              ${isWinner ? 'animate-bounce border-green-400 shadow-[0_0_80px_rgba(74,222,128,1)]' : ''}
+                              ${isLoser ? 'opacity-30 grayscale scale-95' : ''}
+                            `}
+                          >
+                            <span className={`text-[60px] lg:text-[100px] leading-none mb-4 ${isWinner ? 'drop-shadow-2xl' : 'drop-shadow-lg'}`}>
+                              {gift.icon}
+                            </span>
+                            <span className={`text-center font-black text-lg lg:text-2xl px-2 ${isActive ? 'text-slate-900' : 'text-white'}`}>
+                              {gift.text}
+                            </span>
                           </div>
-                        </div>
-                      </div>
-                    )}
+                        )
+                      })}
+                    </div>
 
-                    {giftModal.status === 'revealed' && (
-                      <div className="animate-in zoom-in duration-700 flex flex-col items-center">
-                        <div className="text-5xl text-yellow-300 font-bold mb-10 tracking-widest uppercase animate-bounce drop-shadow-xl">🎉 Tèn Ten Tén Ten 🎉</div>
-                        <div className={`bg-gradient-to-br ${giftModal.selectedBox?.color || 'from-slate-800 to-slate-900'} border-8 border-white/30 p-16 md:p-24 rounded-[4rem] shadow-[0_0_150px_rgba(255,255,255,0.3)] backdrop-blur-xl relative overflow-hidden w-full max-w-5xl`}>
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[400px] opacity-10 pointer-events-none">{giftModal.selectedBox?.icon}</div>
-                          <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-white leading-tight relative z-10 drop-shadow-2xl">{giftModal.result}</h1>
-                        </div>
-                        <button onClick={() => setGiftModal({ show: false, status: 'menu', result: '', selectedBox: null })} className="mt-16 px-16 py-6 bg-white hover:bg-slate-200 text-slate-900 rounded-full font-black text-3xl md:text-4xl tracking-wider transition-transform hover:scale-110 shadow-2xl">
-                          Đóng Hộp Quà
+                    {/* Nút Điều Khiển Mâm Quay */}
+                    <div className="mt-12 lg:mt-16 h-32 flex flex-col items-center justify-center">
+                      {giftModal.status !== 'spinning' && (
+                        <button 
+                          onClick={handleSpinGift} 
+                          className="px-16 py-5 lg:py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-[2rem] font-black text-3xl lg:text-4xl text-white uppercase tracking-widest shadow-[0_0_30px_rgba(37,99,235,0.5)] hover:shadow-[0_0_50px_rgba(37,99,235,0.8)] hover:scale-110 transition-all border-4 border-white/20"
+                        >
+                          {giftModal.status === 'revealed' ? 'Quay Lại' : 'Bắt Đầu Quay'}
                         </button>
-                      </div>
-                    )}
+                      )}
+                      
+                      {giftModal.status === 'revealed' && giftModal.finalGift && (
+                        <div className="absolute bottom-10 bg-slate-900/90 border-2 border-yellow-500/50 px-10 py-4 rounded-full text-center text-yellow-400 text-2xl lg:text-4xl font-bold animate-in slide-in-from-bottom-8 shadow-[0_0_30px_rgba(250,204,21,0.3)]">
+                          Kết quả: <span className="text-white ml-2">{giftModal.finalGift.text}</span>
+                        </div>
+                      )}
+                    </div>
+
                   </div>
                 </div>
               )}
@@ -1050,4 +1073,4 @@
         root.render(<App />);
     </script>
 </body>
-</html>
+</html>S
