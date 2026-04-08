@@ -95,6 +95,7 @@
         const IconRefresh = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>;
         const IconAperture = () => <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg>;
         const IconX = () => <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
+        const IconLightbulb = () => <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>;
 
         // ==========================================
         // CẤU HÌNH DỮ LIỆU & TIỆN ÍCH
@@ -114,6 +115,7 @@
           { id: 'reveal', name: '4. Kịch tính (Hé lộ)' },
           { id: 'pulse', name: '5. Hồi hộp (Nhịp tim)' },
           { id: 'colorful', name: '6. Sắc màu bùng nổ' },
+          { id: 'fakeout', name: '7. Cú lừa (Dừng & quay tiếp)' },
         ];
 
         const CUTE_BOXES = [
@@ -213,6 +215,7 @@
           const [appState, setAppState] = useState('idle'); // idle, spinning, result, presentation, completed
           const [currentResult, setCurrentResult] = useState({ student: null, question: null, questionData: null });
           const [showAnswer, setShowAnswer] = useState(false);
+          const [showHint, setShowHint] = useState(false);
           
           const [giftModal, setGiftModal] = useState({ show: false, status: 'menu', result: '', selectedBox: null });
           const applauseAudioRef = useRef(null);
@@ -258,7 +261,7 @@
                 let startIndex = (data[0] && data[0][0] && data[0][0].toLowerCase().includes('câu')) ? 1 : 0;
                 const qs = [];
                 for(let i=startIndex; i<data.length; i++) {
-                   if(data[i][0]) qs.push({ id: i + 1 - startIndex, q: data[i][0], a: data[i][1] || '(Không có đáp án)' });
+                   if(data[i][0]) qs.push({ id: i + 1 - startIndex, q: data[i][0], a: data[i][1] || '(Không có đáp án)', h: data[i][2] || '' });
                 }
                 if (qs.length === 0) throw new Error("Sheet rỗng");
                 setPoolQuestions(qs);
@@ -274,6 +277,7 @@
             setAppState('idle');
             setCurrentResult({ student: null, question: null, questionData: null });
             setShowAnswer(false);
+            setShowHint(false);
           }, []);
 
           const playApplause = () => {
@@ -323,6 +327,7 @@
             setTimeout(() => {
               setAppState('presentation');
               setShowAnswer(false);
+              setShowHint(false);
             }, 2500);
           };
 
@@ -422,6 +427,31 @@
                 {appState === 'presentation' ? (
                   <>
                     <div className="w-full lg:w-3/4 bg-slate-900 border-2 border-blue-500/50 rounded-[3rem] shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col items-center p-10 md:p-16 relative pt-24 animate-in fade-in zoom-in-95 duration-500">
+                      
+                      {/* Bóng đèn Gợi Ý (nếu câu hỏi có gợi ý) */}
+                      {currentResult.questionData?.h && (
+                        <div className="absolute top-8 left-8 z-30 flex flex-col items-start">
+                          <button 
+                            onClick={() => setShowHint(!showHint)}
+                            className={`p-4 rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.6)] ${showHint ? 'bg-yellow-500 text-slate-900 scale-110 shadow-[0_0_30px_rgba(250,204,21,0.8)]' : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/40 hover:scale-110 animate-pulse'}`}
+                            title="Xem Gợi Ý"
+                          >
+                            <IconLightbulb />
+                          </button>
+                          
+                          {showHint && (
+                            <div className="mt-4 max-w-sm md:max-w-md lg:max-w-lg bg-slate-800/95 border-2 border-yellow-500/50 p-6 rounded-3xl shadow-[0_0_40px_rgba(250,204,21,0.2)] animate-in fade-in slide-in-from-top-4 text-left backdrop-blur-md">
+                              <div className="text-yellow-400 font-bold mb-3 uppercase tracking-widest text-sm border-b border-yellow-500/30 pb-2 flex items-center gap-2">
+                                <IconLightbulb /> Gợi ý giải
+                              </div>
+                              <div className="text-white text-xl md:text-2xl leading-relaxed">
+                                <MathText text={currentResult.questionData.h} />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex justify-center items-center">
                         <LaurelWreath />
                         <div className="relative z-10 w-36 h-36 md:w-40 md:h-40 bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-600 rounded-full flex items-center justify-center border-4 border-slate-900 shadow-2xl">
@@ -630,7 +660,7 @@
                       <div>
                         <label className="block text-lg font-medium text-slate-400 mb-3">ID Google Sheet (Tùy chọn tải câu hỏi)</label>
                         <input type="text" name="sheetId" defaultValue={settings.sheetId} placeholder="Ví dụ: 1BxiMVs0XRA5..." className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl px-6 py-4 text-xl text-white focus:ring-4 focus:ring-blue-500/50 focus:outline-none placeholder-slate-600" />
-                        <p className="text-sm text-yellow-500 mt-3">* Sheet cần có 2 cột (Câu hỏi | Đáp án). Phải chia sẻ dạng <strong>"Bất kỳ ai có liên kết"</strong>. Để trống nếu muốn dùng mặc định.</p>
+                        <p className="text-sm text-yellow-500 mt-3">* Sheet cần có 3 cột (Câu hỏi | Đáp án | Gợi ý giải - Tùy chọn). Phải chia sẻ dạng <strong>"Bất kỳ ai có liên kết"</strong>. Để trống nếu muốn dùng mặc định.</p>
                       </div>
                       {!settings.sheetId && (
                         <div>
@@ -661,7 +691,7 @@
 
           useEffect(() => {
             if (mode === 'random') {
-              const modes = ['wheel', 'flash', 'slot', 'reveal', 'pulse', 'colorful'];
+              const modes = ['wheel', 'flash', 'slot', 'reveal', 'pulse', 'colorful', 'fakeout']; // Đã update thêm "fakeout"
               actualModeRef.current = modes[Math.floor(Math.random() * modes.length)];
             } else actualModeRef.current = mode;
           }, [mode]);
@@ -673,7 +703,31 @@
               const duration = 3800;
               const startTime = Date.now();
 
-              if (currentMode === 'flash') {
+              // CHẾ ĐỘ MỚI: CÚ LỪA ĐỘT NGỘT DỪNG RỒI QUAY TIẾP
+              if (currentMode === 'fakeout') {
+                let delay = 20;
+                let hasPaused = false;
+                while (Date.now() - startTime < duration - 200 && isActive) {
+                  const elapsed = Date.now() - startTime;
+                  if (elapsed > 2000 && !hasPaused) {
+                    hasPaused = true;
+                    // Hiện kết quả giả và Dừng lại 0.5s
+                    setDisplayData({ s: randomInt(1, totalStudents), q: randomInt(1, totalQuestions) });
+                    setVisualState('text-green-400 scale-[1.8] drop-shadow-[0_0_50px_rgba(74,222,128,0.8)]');
+                    await sleep(500); // Dừng đúng 0.5s
+                    delay = 10; // Quay lại thật nhanh
+                  } else {
+                    setDisplayData({ s: randomInt(1, totalStudents), q: randomInt(1, totalQuestions) });
+                    setVisualState(randomColor() + ' scale-110');
+                    await sleep(delay);
+                    if (hasPaused) {
+                        delay += 12; // Chậm dần đều lại để về đích
+                    } else {
+                        delay += 3; // Chậm dần từ từ trước khi dừng giả
+                    }
+                  }
+                }
+              } else if (currentMode === 'flash') {
                 let delay = 20;
                 while (Date.now() - startTime < duration - 200 && isActive) {
                   setDisplayData({ s: randomInt(1, totalStudents), q: randomInt(1, totalQuestions) });
@@ -777,6 +831,7 @@
              )
           }
 
+          // Render mặc định cho Flash, Reveal, Pulse và Fakeout
           return (
             <div className={`text-center transition-all duration-100 ${visualState} ${activeMode === 'reveal' ? 'matrix-bg w-full h-full flex flex-col items-center justify-center' : ''}`}>
               <div className="text-4xl md:text-6xl lg:text-7xl text-slate-400 mb-8 tracking-widest uppercase font-semibold">Đang tìm kiếm...</div>
