@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vòng quay Toán Thầy Lực</title>
+    
+    <!-- Cài đặt Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Cài đặt React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Thư viện Pháo hoa vật lý siêu thực -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Cài đặt MathJax cho Công thức Toán -->
+    <script>
+      window.MathJax = {
+        tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+        startup: { typeset: false }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #020617; color: #f1f5f9; }
+        
+        /* Hiệu ứng Logo VTL đổi màu */
+        @keyframes vtlColorChange {
+            0% { filter: hue-rotate(0deg); box-shadow: 0 0 15px rgba(37,99,235,0.6); }
+            50% { filter: hue-rotate(180deg); box-shadow: 0 0 30px rgba(37,99,235,0.9); }
+            100% { filter: hue-rotate(360deg); box-shadow: 0 0 15px rgba(37,99,235,0.6); }
+        }
+        .vtl-logo {
+            animation: vtlColorChange 4s linear infinite;
+        }
+
+        /* Hiệu ứng Hoa Hướng Dương Nở */
+        @keyframes bloom {
+            0% { transform: scale(0) rotate(-60deg) translateY(50px); opacity: 0; filter: brightness(0.5); }
+            60% { transform: scale(1.2) rotate(10deg) translateY(-10px); opacity: 1; filter: brightness(1.2); }
+            100% { transform: scale(1) rotate(0deg) translateY(0); opacity: 1; filter: brightness(1); }
+        }
+        .sunflower-bloom {
+            animation: bloom 2.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            transform-origin: center bottom;
+        }
+
+        /* Các hiệu ứng Animation cũ */
+        .animate-spin-slow { animation: spin 8s linear infinite; }
+        .glitch-text { text-shadow: 2px 0 red, -2px 0 blue; animation: glitch 0.2s linear infinite; }
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 1px) }
+            40% { transform: translate(-1px, -1px) }
+            60% { transform: translate(2px, 1px) }
+            80% { transform: translate(1px, -1px) }
+            100% { transform: translate(0) }
+        }
+        .matrix-bg {
+            background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(16,185,129,0.2) 50%, rgba(0,0,0,0) 100%);
+            background-size: 100% 200%;
+            animation: matrix-scan 2s linear infinite;
+        }
+        @keyframes matrix-scan { 0% { background-position: 0% -100%; } 100% { background-position: 0% 100%; } }
+        
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .animate-intense-shake {
+            animation: intense-shake 0.3s cubic-bezier(.36,.07,.19,.97) both infinite;
+            transform: translate3d(0, 0, 0);
+        }
+        @keyframes intense-shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0) rotate(-2deg); }
+            20%, 80% { transform: translate3d(4px, 0, 0) rotate(2deg); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0) rotate(-4deg); }
+            40%, 60% { transform: translate3d(6px, 0, 0) rotate(4deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // ==========================================
+        // BỘ ICONS (Dùng inline SVG thay cho thư viện)
+        // ==========================================
+        const IconSettings = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>;
+        const IconPlay = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
+        const IconGift = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>;
+        const IconRefresh = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>;
+        const IconAperture = () => <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg>;
+        const IconX = () => <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
+
+        // ==========================================
+        // CẤU HÌNH DỮ LIỆU & TIỆN ÍCH
+        // ==========================================
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const randomColor = () => {
+          const colors = ['text-red-500', 'text-blue-500', 'text-green-500', 'text-yellow-400', 'text-purple-500', 'text-pink-500', 'text-cyan-400', 'text-orange-500'];
+          return colors[Math.floor(Math.random() * colors.length)];
+        };
+
+        const MODES = [
+          { id: 'random', name: 'Ngẫu nhiên tất cả' },
+          { id: 'wheel', name: '1. Vòng quay ma thuật' },
+          { id: 'flash', name: '2. Chớp nháy đổi màu' },
+          { id: 'slot', name: '3. Cuộn số (Slot)' },
+          { id: 'reveal', name: '4. Kịch tính (Hé lộ)' },
+          { id: 'pulse', name: '5. Hồi hộp (Nhịp tim)' },
+          { id: 'colorful', name: '6. Sắc màu bùng nổ' },
+        ];
+
+        const CUTE_BOXES = [
+          { id: 1, icon: '🦄', color: 'from-pink-400 to-purple-500', name: 'Kỳ Lân Phép Thuật' },
+          { id: 2, icon: '🦖', color: 'from-green-400 to-emerald-600', name: 'Khủng Long Xanh' },
+          { id: 3, icon: '🦁', color: 'from-yellow-400 to-orange-500', name: 'Sư Tử Dũng Mãnh' },
+          { id: 4, icon: '🐰', color: 'from-blue-300 to-indigo-500', name: 'Thỏ Trắng Đáng Yêu' },
+          { id: 5, icon: '🐼', color: 'from-slate-600 to-slate-800', name: 'Gấu Trúc Tròn Vo' },
+          { id: 6, icon: '🦊', color: 'from-orange-400 to-red-500', name: 'Cáo Nhỏ Tinh Nghịch' },
+        ];
+
+        const FUNNY_GIFTS = [
+          "Trình diễn một điệu nhảy tự do trong 10 giây 🕺",
+          "Kể một câu chuyện cười cho cả lớp nghe 🤣",
+          "Hát một đoạn điệp khúc bài hát yêu thích 🎤",
+          "Làm mặt xấu/kì cục để lớp chụp ảnh dìm 🤪",
+          "Đứng lên ngồi xuống 5 lần để rèn luyện sức khoẻ 💪"
+        ];
+
+        // Component Xử lý MathJax
+        const MathText = ({ text }) => {
+          const nodeRef = useRef(null);
+          useEffect(() => {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+              window.MathJax.typesetPromise([nodeRef.current]).catch(err => console.log(err));
+            }
+          }, [text]);
+          const safeText = text != null ? String(text) : '';
+          return <span ref={nodeRef} className="inline-block text-left" dangerouslySetInnerHTML={{ __html: safeText.replace(/\n/g, '<br/>') }} />;
+        };
+
+        const parseCSV = (str) => {
+            const arr = [];
+            let quote = false;
+            let row = 0, col = 0;
+            arr[row] = []; arr[row][col] = '';
+            for (let c = 0; c < str.length; c++) {
+                let cc = str[c], nc = str[c+1];
+                if (cc === '"' && quote && nc === '"') { arr[row][col] += cc; ++c; continue; }
+                if (cc === '"') { quote = !quote; continue; }
+                if (cc === ',' && !quote) { ++col; arr[row][col] = ''; continue; }
+                if (cc === '\r' && nc === '\n' && !quote) { ++row; col = 0; arr[row] = []; arr[row][col] = ''; ++c; continue; }
+                if (cc === '\n' && !quote) { ++row; col = 0; arr[row] = []; arr[row][col] = ''; continue; }
+                if (cc === '\r' && !quote) { ++row; col = 0; arr[row] = []; arr[row][col] = ''; continue; }
+                arr[row][col] += cc;
+            }
+            return arr;
+        };
+
+        const LaurelWreath = () => (
+          <svg width="140" height="140" viewBox="0 0 100 100" className="absolute z-0 text-yellow-400 drop-shadow-[0_0_15px_rgba(253,224,71,0.6)] animate-pulse">
+            <path d="M 50 90 A 40 40 0 1 1 50 10 A 40 40 0 1 1 50 90" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.5"/>
+            <path d="M 50 95 C 20 95, 5 70, 5 40 C 15 60, 30 75, 50 85" fill="none" stroke="currentColor" strokeWidth="3"/>
+            <path d="M 50 95 C 80 95, 95 70, 95 40 C 85 60, 70 75, 50 85" fill="none" stroke="currentColor" strokeWidth="3"/>
+            <path d="M 10 60 C 5 50 15 45 20 50 C 15 55 10 65 10 60 Z" fill="currentColor"/>
+            <path d="M 15 45 C 10 35 20 30 25 35 C 20 40 15 50 15 45 Z" fill="currentColor"/>
+            <path d="M 25 30 C 20 20 30 15 35 20 C 30 25 25 35 25 30 Z" fill="currentColor"/>
+            <path d="M 38 18 C 35 10 45 5 50 10 C 45 15 38 25 38 18 Z" fill="currentColor"/>
+            <path d="M 90 60 C 95 50 85 45 80 50 C 85 55 90 65 90 60 Z" fill="currentColor"/>
+            <path d="M 85 45 C 90 35 80 30 75 35 C 80 40 85 50 85 45 Z" fill="currentColor"/>
+            <path d="M 75 30 C 80 20 70 15 65 20 C 70 25 75 35 75 30 Z" fill="currentColor"/>
+            <path d="M 62 18 C 65 10 55 5 50 10 C 55 15 62 25 62 18 Z" fill="currentColor"/>
+          </svg>
+        );
+
+        // Hàm bắn pháo hoa chân thật bằng Canvas Confetti
+        const fireRealisticFireworks = () => {
+            const duration = 10 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
+
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+                const particleCount = 60 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        };
+
+
+        // ==========================================
+        // COMPONENT APP CHÍNH
+        // ==========================================
+        function App() {
+          const [settings, setSettings] = useState({ students: 48, questions: 20, sheetId: '' });
+          const [showSettings, setShowSettings] = useState(false);
+          
+          const [poolStudents, setPoolStudents] = useState([]);
+          const [poolQuestions, setPoolQuestions] = useState([]);
+          
+          const [selectedMode, setSelectedMode] = useState('random');
+          const [appState, setAppState] = useState('idle'); // idle, spinning, result, presentation, completed
+          const [currentResult, setCurrentResult] = useState({ student: null, question: null, questionData: null });
+          const [showAnswer, setShowAnswer] = useState(false);
+          
+          const [giftModal, setGiftModal] = useState({ show: false, status: 'menu', result: '', selectedBox: null });
+          const applauseAudioRef = useRef(null);
+
+          useEffect(() => {
+            applauseAudioRef.current = new Audio('https://actions.google.com/sounds/v1/crowds/light_applause.ogg');
+            initPools(settings.students, settings.questions, settings.sheetId);
+          }, [settings.students, settings.questions, settings.sheetId]);
+
+          const initPools = useCallback(async (studentCount, questionCount, sheetId) => {
+            setPoolStudents(Array.from({ length: studentCount }, (_, i) => i + 1));
+            
+            if (sheetId) {
+              try {
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+                const res = await fetch(url);
+                const text = await res.text();
+                const data = parseCSV(text);
+                let startIndex = (data[0] && data[0][0] && data[0][0].toLowerCase().includes('câu')) ? 1 : 0;
+                const qs = [];
+                for(let i=startIndex; i<data.length; i++) {
+                   if(data[i][0]) qs.push({ id: i + 1 - startIndex, q: data[i][0], a: data[i][1] || '(Không có đáp án)' });
+                }
+                if (qs.length === 0) throw new Error("Sheet rỗng");
+                setPoolQuestions(qs);
+              } catch(e) {
+                console.error("Lỗi Google Sheet:", e);
+                alert("Lỗi tải Google Sheet. Đang sử dụng câu hỏi mặc định.");
+                setPoolQuestions(Array.from({ length: questionCount }, (_, i) => ({ id: i + 1, q: `Câu hỏi mặc định số ${i + 1}`, a: `Đáp án ${i + 1}` })));
+              }
+            } else {
+              setPoolQuestions(Array.from({ length: questionCount }, (_, i) => ({ id: i + 1, q: `Câu hỏi mặc định số ${i + 1}`, a: `Đáp án của câu hỏi ${i + 1}` })));
+            }
+
+            setAppState('idle');
+            setCurrentResult({ student: null, question: null, questionData: null });
+            setShowAnswer(false);
+          }, []);
+
+          const playApplause = () => {
+            if (applauseAudioRef.current) {
+              applauseAudioRef.current.currentTime = 0;
+              applauseAudioRef.current.play().catch(e => console.log('Không thể phát âm thanh:', e));
+            }
+          };
+
+          const handleApplySettings = (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const s = parseInt(fd.get('students'));
+            const q = parseInt(fd.get('questions') || 20);
+            const sId = (fd.get('sheetId') || '').trim();
+            if (s > 0 && q > 0) {
+              setSettings({ students: s, questions: q, sheetId: sId });
+              setShowSettings(false);
+            }
+          };
+
+          const handleSpin = async () => {
+            if (appState === 'spinning') return;
+            if (poolQuestions.length === 0) return; // Đã xử lý hết ở hàm "Tiếp tục quay"
+
+            let currentStudentsPool = [...poolStudents];
+
+            const sIdx = Math.floor(Math.random() * currentStudentsPool.length);
+            const qIdx = Math.floor(Math.random() * poolQuestions.length);
+            
+            const targetStudent = currentStudentsPool[sIdx];
+            const targetQuestion = poolQuestions[qIdx];
+
+            const newPoolQuestions = poolQuestions.filter((_, i) => i !== qIdx);
+            setPoolQuestions(newPoolQuestions);
+            setCurrentResult({ student: targetStudent, question: targetQuestion.id, questionData: targetQuestion });
+            
+            setAppState('spinning');
+            await sleep(4000); 
+            
+            setAppState('result');
+            playApplause();
+            
+            // Bắn pháo hoa đơn giản lúc ra kết quả
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            
+            setTimeout(() => {
+              setAppState('presentation');
+              setShowAnswer(false);
+            }, 2500);
+          };
+
+          const handleContinue = () => {
+            if (poolQuestions.length === 0) {
+              setAppState('completed');
+              fireRealisticFireworks();
+              playApplause();
+            } else {
+              setAppState('idle');
+            }
+          };
+
+          const handleOpenGift = async (boxInfo) => {
+            if (giftModal.status !== 'menu') return;
+            setGiftModal(prev => ({ ...prev, status: 'opening', selectedBox: boxInfo }));
+            await sleep(3000);
+
+            const rand = Math.random() * 10;
+            let finalGift = "";
+            if (rand < 3) finalGift = "🎁 1 ĐIỂM CỘNG MÔN TOÁN";
+            else if (rand < 4) finalGift = "🌟 3 ĐIỂM CỘNG MÔN TOÁN";
+            else if (rand < 5) { finalGift = "👏 1 TRÀNG PHÁO TAY TỪ LỚP"; playApplause(); }
+            else {
+              const funnyIdx = Math.floor(Math.random() * FUNNY_GIFTS.length);
+              finalGift = `🎭 ${FUNNY_GIFTS[funnyIdx]}`;
+            }
+
+            setGiftModal(prev => ({ ...prev, status: 'revealed', result: finalGift }));
+            confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 } });
+          };
+
+          return (
+            <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col relative overflow-hidden">
+              
+              {/* Background Decor */}
+              <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[100px]"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[100px]"></div>
+              </div>
+
+              {/* Màn Hình Hoàn Thành (Hết câu hỏi) */}
+              {appState === 'completed' && (
+                <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl animate-in fade-in duration-1000 p-4">
+                  <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 mb-12 text-center drop-shadow-[0_0_20px_rgba(236,72,153,0.5)] animate-bounce leading-tight">
+                    🎉 Chúc mừng các em đã hoàn thành <br/> bài học tuyệt vời này! 🎉
+                  </h1>
+                  
+                  {/* Hoa hướng dương nở rộ */}
+                  <div className="text-[150px] md:text-[250px] sunflower-bloom drop-shadow-[0_0_80px_rgba(250,204,21,0.5)] relative">
+                    🌻
+                    <div className="absolute inset-0 bg-yellow-400/20 blur-3xl rounded-full"></div>
+                  </div>
+
+                  <button 
+                    onClick={() => setShowSettings(true)} 
+                    className="mt-16 px-10 py-5 bg-white/10 hover:bg-white/20 border-2 border-white/30 rounded-full text-white font-bold text-2xl backdrop-blur-sm transition-all hover:scale-110 shadow-[0_0_30px_rgba(255,255,255,0.1)] flex items-center gap-3"
+                  >
+                    <IconSettings /> Cài đặt bài học mới
+                  </button>
+                </div>
+              )}
+
+              {/* Header */}
+              <header className="relative z-10 flex items-center justify-between p-6 border-b border-slate-800 bg-slate-950/50 backdrop-blur-md">
+                <div className="flex items-center gap-4">
+                  {/* Logo VTL */}
+                  <div className="vtl-logo w-14 h-14 flex items-center justify-center bg-blue-600 rounded-full border-2 border-white text-white font-black text-xl tracking-tighter">
+                    VTL
+                  </div>
+                  <h1 className="text-2xl md:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                    Vòng quay Toán Thầy Lực
+                  </h1>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setGiftModal({ show: true, status: 'menu', result: '', selectedBox: null })}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-pink-600 to-orange-500 hover:from-pink-500 hover:to-orange-400 text-white rounded-xl transition-all shadow-lg shadow-pink-500/20 hover:shadow-pink-500/40 hover:-translate-y-0.5"
+                  >
+                    <IconGift />
+                    <span className="hidden sm:inline font-bold">Hộp Quà</span>
+                  </button>
+                  <button 
+                    onClick={() => setShowSettings(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors border border-slate-700 font-medium"
+                  >
+                    <IconSettings />
+                    <span className="hidden sm:inline">Cài đặt</span>
+                  </button>
+                </div>
+              </header>
+
+              {/* Main Content */}
+              <main className={`flex-1 relative z-10 flex ${appState === 'presentation' ? 'flex-col lg:flex-row gap-6 items-stretch' : 'flex-col items-center justify-center'} p-4`}>
+                
+                {appState === 'presentation' ? (
+                  <>
+                    <div className="w-full lg:w-2/3 bg-slate-900 border-2 border-blue-500/50 rounded-3xl shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col items-center p-8 md:p-12 relative pt-20 animate-in fade-in zoom-in-95 duration-500">
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex justify-center items-center">
+                        <LaurelWreath />
+                        <div className="relative z-10 w-24 h-24 bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-600 rounded-full flex items-center justify-center border-4 border-slate-900 shadow-2xl">
+                          <span className="text-4xl font-black text-slate-900 drop-shadow-md">{currentResult.student}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 w-full flex flex-col items-center justify-center text-center py-8 gap-12 overflow-y-auto">
+                        <div className="text-3xl md:text-5xl font-semibold leading-normal text-white w-full px-4">
+                          <MathText text={currentResult.questionData?.q || ''} />
+                        </div>
+                        
+                        {showAnswer && (
+                          <div className="text-2xl md:text-4xl font-bold text-green-400 animate-in slide-in-from-bottom-8 fade-in duration-500 w-full border-t border-slate-700/50 pt-12 px-4">
+                            <span className="text-slate-500 text-lg uppercase tracking-widest font-black block mb-6">Đáp Án</span>
+                            <MathText text={currentResult.questionData?.a || ''} />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-8 flex gap-4 w-full max-w-lg">
+                        {!showAnswer && (
+                          <button 
+                            onClick={() => setShowAnswer(true)} 
+                            className="flex-1 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-2xl font-bold text-2xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:-translate-y-1 text-white"
+                          >
+                            Xem Kết Quả
+                          </button>
+                        )}
+                        {showAnswer && (
+                          <button 
+                            onClick={handleContinue} 
+                            className="flex-1 py-5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-2xl font-bold text-2xl transition-all text-white shadow-lg"
+                          >
+                            Tiếp Tục Quay
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="w-full lg:w-1/3 flex flex-col gap-6 animate-in slide-in-from-right-8 fade-in duration-500">
+                      <div className="bg-slate-900/80 backdrop-blur-md p-6 md:p-8 rounded-3xl border border-slate-800 flex flex-col gap-8 flex-1">
+                        <h3 className="text-2xl font-bold text-slate-300 text-center uppercase tracking-wider border-b border-slate-800 pb-4">Thống Kê</h3>
+                        <div className="flex justify-between items-center bg-slate-800/50 p-6 rounded-2xl">
+                          <div>
+                            <div className="text-sm text-slate-400 uppercase tracking-widest mb-2 font-semibold">Câu còn lại</div>
+                            <div className="text-5xl font-black text-yellow-400 drop-shadow-md">{poolQuestions.length}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm text-slate-400 uppercase tracking-widest mb-2 font-semibold">HS tổng</div>
+                            <div className="text-5xl font-black text-blue-400 drop-shadow-md">{settings.students}</div>
+                          </div>
+                        </div>
+                        <div className="mt-auto">
+                           <button onClick={handleContinue} className="w-full py-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all border border-slate-600">
+                             <IconRefresh /> Trở Về Trạng Thái Chờ
+                           </button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : appState !== 'completed' && (
+                  <>
+                    <div className="w-full max-w-4xl aspect-[21/9] sm:aspect-[16/9] lg:aspect-[21/9] bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden relative flex flex-col items-center justify-center mb-8 ring-1 ring-white/10">
+                      {appState === 'idle' && (
+                        <div className="text-center opacity-60">
+                          <div className="opacity-50 mx-auto w-max mb-4 animate-spin-slow"><IconAperture /></div>
+                          <h2 className="text-3xl font-light tracking-widest uppercase">Sẵn Sàng</h2>
+                          <p className="mt-2 text-slate-400">Bấm nút "Quay Số" để bắt đầu</p>
+                        </div>
+                      )}
+
+                      {appState === 'spinning' && (
+                        <SpinEngine target={currentResult} mode={selectedMode} totalStudents={settings.students} totalQuestions={settings.questions} />
+                      )}
+
+                      {appState === 'result' && (
+                        <div className="text-center animate-in zoom-in duration-500">
+                          <div className="inline-block px-4 py-1 mb-4 rounded-full bg-blue-500/20 text-blue-300 text-sm font-semibold border border-blue-500/30 uppercase tracking-widest">Người Được Chọn</div>
+                          <h2 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 drop-shadow-lg mb-6">
+                            Học sinh {currentResult.student}
+                          </h2>
+                          <div className="text-3xl md:text-5xl font-bold text-slate-300 flex items-center justify-center gap-4">
+                            <span className="text-slate-500">→</span>
+                            <span>Câu hỏi số <span className="text-yellow-400">{currentResult.question}</span></span>
+                            <span className="text-slate-500">←</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="w-full max-w-4xl bg-slate-900/80 backdrop-blur-md p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-center gap-6 justify-between">
+                      <div className="flex gap-6 text-center md:text-left">
+                        <div>
+                          <div className="text-sm text-slate-400 mb-1">Tổng học sinh</div>
+                          <div className="text-2xl font-bold text-blue-400">{settings.students} <span className="text-sm text-slate-600 font-normal">HS</span></div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-slate-400 mb-1">Câu hỏi còn lại</div>
+                          <div className="text-2xl font-bold text-yellow-400">{poolQuestions.length}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                        <div className="relative w-full sm:w-64">
+                          <select 
+                            value={selectedMode}
+                            onChange={(e) => setSelectedMode(e.target.value)}
+                            disabled={appState === 'spinning'}
+                            className="w-full appearance-none bg-slate-800 border border-slate-700 text-slate-200 py-3 pl-4 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                          >
+                            {MODES.map(m => (
+                              <option key={m.id} value={m.id}>{m.name}</option>
+                            ))}
+                          </select>
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                        </div>
+
+                        <button
+                          onClick={handleSpin}
+                          disabled={appState === 'spinning' || poolQuestions.length === 0}
+                          className={`w-full sm:w-auto px-10 py-4 rounded-xl font-bold text-xl uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2
+                            ${appState === 'spinning' 
+                              ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
+                              : poolQuestions.length === 0
+                                ? 'bg-red-900/50 text-red-500 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-1'
+                            }
+                          `}
+                        >
+                          {appState === 'spinning' ? <>Đang quay...</> : poolQuestions.length === 0 ? <>Hết câu hỏi</> : <><IconPlay /> Quay Số</>}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </main>
+
+              {/* MODAL HỘP QUÀ BÍ ẨN */}
+              {giftModal.show && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                  <button onClick={() => setGiftModal({ show: false, status: 'menu', result: '', selectedBox: null })} className="absolute top-6 right-6 p-2 bg-slate-800/50 hover:bg-slate-700 rounded-full text-white/50 hover:text-white transition-colors z-50">
+                    <IconX />
+                  </button>
+
+                  <div className="text-center w-full max-w-4xl flex flex-col items-center">
+                    {giftModal.status === 'menu' && (
+                      <div className="flex flex-col items-center animate-in zoom-in duration-500">
+                        <h2 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 mb-8 animate-bounce drop-shadow-lg">
+                          🌟 Các Con Chọn Hộp Nào? 🌟
+                        </h2>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full px-4">
+                          {CUTE_BOXES.map(box => (
+                            <button key={box.id} onClick={() => handleOpenGift(box)} className={`bg-gradient-to-br ${box.color} p-6 md:p-8 rounded-3xl shadow-xl transform transition-all duration-300 hover:scale-110 hover:-translate-y-2 border-4 border-white/20 flex flex-col items-center justify-center gap-4 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] group`}>
+                              <span className="text-6xl md:text-8xl drop-shadow-xl group-hover:animate-bounce">{box.icon}</span>
+                              <span className="text-white font-bold text-lg md:text-xl drop-shadow-md">{box.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {giftModal.status === 'opening' && giftModal.selectedBox && (
+                      <div className="flex flex-col items-center">
+                        <h2 className="text-4xl md:text-5xl font-black text-white mb-12 animate-pulse drop-shadow-lg">
+                          Đang mở hộp {giftModal.selectedBox.name}...
+                        </h2>
+                        <div className="relative group scale-125 animate-intense-shake">
+                          <div className="absolute inset-0 rounded-full blur-3xl animate-pulse scale-150 opacity-60 bg-white"></div>
+                          <div className={`relative z-10 bg-gradient-to-br ${giftModal.selectedBox.color} p-12 md:p-16 rounded-3xl border-4 border-white/40 shadow-2xl flex items-center justify-center`}>
+                            <span className="text-[120px] md:text-[150px] drop-shadow-2xl">{giftModal.selectedBox.icon}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {giftModal.status === 'revealed' && (
+                      <div className="animate-in zoom-in duration-700 flex flex-col items-center">
+                        <div className="text-3xl text-yellow-300 font-bold mb-6 tracking-widest uppercase animate-bounce drop-shadow-md">🎉 Tèn Ten Tén Ten 🎉</div>
+                        <div className={`bg-gradient-to-br ${giftModal.selectedBox?.color || 'from-slate-800 to-slate-900'} border-4 border-white/30 p-8 md:p-12 rounded-3xl shadow-[0_0_100px_rgba(255,255,255,0.2)] backdrop-blur-xl relative overflow-hidden`}>
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[250px] opacity-10 pointer-events-none">{giftModal.selectedBox?.icon}</div>
+                          <h1 className="text-4xl md:text-6xl font-black text-white leading-tight relative z-10 drop-shadow-lg">{giftModal.result}</h1>
+                        </div>
+                        <button onClick={() => setGiftModal({ show: false, status: 'menu', result: '', selectedBox: null })} className="mt-12 px-10 py-4 bg-white hover:bg-slate-200 text-slate-900 rounded-full font-black text-xl tracking-wider transition-transform hover:scale-110 shadow-xl">
+                          Đóng Hộp Quà
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* MODAL CÀI ĐẶT */}
+              {showSettings && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+                  <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+                    <div className="p-6 border-b border-slate-800">
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2"><IconSettings /> Cài Đặt Thông Số</h3>
+                    </div>
+                    <form onSubmit={handleApplySettings} className="p-6 space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-2">Tổng số học sinh (Không bị loại trừ)</label>
+                        <input type="number" name="students" defaultValue={settings.students} min="1" max="999" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-2">ID Google Sheet (Tùy chọn tải câu hỏi)</label>
+                        <input type="text" name="sheetId" defaultValue={settings.sheetId} placeholder="Ví dụ: 1BxiMVs0XRA5...UUqptlbs74OgvE" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-600" />
+                        <p className="text-xs text-yellow-500 mt-2">* Sheet cần có 2 cột (Câu hỏi | Đáp án). Phải chia sẻ dạng <strong>"Bất kỳ ai có liên kết"</strong>. Để trống nếu muốn dùng mặc định.</p>
+                      </div>
+                      {!settings.sheetId && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-400 mb-2">Số lượng câu hỏi mặc định</label>
+                          <input type="number" name="questions" defaultValue={settings.questions} min="1" max="999" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
+                        </div>
+                      )}
+                      {settings.sheetId && <input type="hidden" name="questions" value={settings.questions} />}
+                      <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={() => setShowSettings(false)} className="flex-1 px-4 py-3 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors">Hủy</button>
+                        <button type="submit" className="flex-1 px-4 py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/20">Lưu & Tải Lại</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // ==========================================
+        // COMPONENT ANIMATION QUAY SỐ
+        // ==========================================
+        function SpinEngine({ target, mode, totalStudents, totalQuestions }) {
+          const [displayData, setDisplayData] = useState({ s: '...', q: '...' });
+          const [visualState, setVisualState] = useState(''); 
+          const actualModeRef = useRef(mode);
+
+          useEffect(() => {
+            if (mode === 'random') {
+              const modes = ['wheel', 'flash', 'slot', 'reveal', 'pulse', 'colorful'];
+              actualModeRef.current = modes[Math.floor(Math.random() * modes.length)];
+            } else actualModeRef.current = mode;
+          }, [mode]);
+
+          useEffect(() => {
+            let isActive = true;
+            const currentMode = actualModeRef.current;
+            const runAnimation = async () => {
+              const duration = 3800;
+              const startTime = Date.now();
+
+              if (currentMode === 'flash') {
+                let delay = 20;
+                while (Date.now() - startTime < duration - 200 && isActive) {
+                  setDisplayData({ s: randomInt(1, totalStudents), q: randomInt(1, totalQuestions) });
+                  setVisualState(randomColor() + ' scale-110'); 
+                  await sleep(delay);
+                  const elapsed = Date.now() - startTime;
+                  if (elapsed > 1000) delay = 50;
+                  if (elapsed > 2000) delay = 100;
+                  if (elapsed > 3000) delay = 300;
+                  setVisualState(randomColor() + ' scale-100');
+                }
+              } else if (currentMode === 'colorful') {
+                let delay = 80;
+                while (Date.now() - startTime < duration - 200 && isActive) {
+                  setDisplayData({ s: randomInt(1, totalStudents), q: randomInt(1, totalQuestions) });
+                  setVisualState(`style-bg-hue rotate-${Math.random() > 0.5 ? '3' : '-3'}`);
+                  await sleep(delay);
+                }
+              } else if (currentMode === 'pulse') {
+                let delay = 400; 
+                setVisualState('text-red-500 scale-150 blur-sm'); 
+                while (Date.now() - startTime < duration - 500 && isActive) {
+                  setDisplayData({ s: randomInt(1, totalStudents), q: randomInt(1, totalQuestions) });
+                  setVisualState('text-red-500 scale-[2] blur-md opacity-50');
+                  await sleep(delay/2);
+                  if(!isActive) break;
+                  setVisualState('text-red-500 scale-110 blur-sm opacity-100');
+                  await sleep(delay/2);
+                  delay = Math.max(100, delay - 80); 
+                }
+              } else if (currentMode === 'reveal') {
+                setVisualState('glitch-text text-white');
+                while (Date.now() - startTime < duration - 300 && isActive) {
+                  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*';
+                  let rs = '', rq = '';
+                  for(let i=0; i<3; i++) rs += chars.charAt(Math.floor(Math.random() * chars.length));
+                  for(let i=0; i<2; i++) rq += chars.charAt(Math.floor(Math.random() * chars.length));
+                  setDisplayData({ s: rs, q: rq });
+                  await sleep(50);
+                }
+              } else if (currentMode === 'wheel') {
+                setVisualState('wheel-mode');
+                let delay = 30;
+                while (Date.now() - startTime < duration - 500 && isActive) {
+                  setDisplayData({ s: randomInt(1, totalStudents), q: randomInt(1, totalQuestions) });
+                  await sleep(delay); delay += 5; 
+                }
+              } else if (currentMode === 'slot') {
+                 let delay = 40;
+                 while (Date.now() - startTime < duration - 200 && isActive) {
+                  setDisplayData({ s: randomInt(1, totalStudents), q: randomInt(1, totalQuestions) });
+                  await sleep(delay);
+                }
+              }
+              
+              if (isActive) {
+                setDisplayData({ s: target.student, q: target.question });
+                setVisualState('text-white scale-125 transition-all duration-300');
+              }
+            };
+            runAnimation();
+            return () => { isActive = false; };
+          }, [target, totalStudents, totalQuestions]);
+
+          const activeMode = actualModeRef.current;
+
+          if (activeMode === 'wheel') {
+            return (
+              <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                <div className="absolute w-[800px] h-[800px] rounded-full opacity-30 blur-xl animate-spin-slow" style={{ background: 'conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #eab308, #22c55e, #3b82f6)' }}></div>
+                <div className="z-10 text-center bg-slate-900/80 p-8 rounded-full shadow-2xl backdrop-blur-sm border-4 border-blue-500/30 border-dashed animate-spin-slow" style={{ animationDuration: '4s' }}>
+                  <div className="animate-spin-slow" style={{ animationDirection: 'reverse', animationDuration: '4s' }}>
+                     <h3 className="text-4xl font-bold text-blue-300 mb-2">Đang Quay...</h3>
+                     <div className="text-6xl font-black text-white">{displayData.s}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (activeMode === 'slot') {
+            return (
+              <div className="flex gap-4 items-center justify-center text-7xl font-black font-mono">
+                <div className="bg-slate-800 p-8 rounded-2xl border-y-4 border-blue-500 shadow-inner h-40 overflow-hidden flex items-center">
+                  <div className="animate-bounce text-blue-400">HS {displayData.s}</div>
+                </div>
+                <div className="text-slate-600">-</div>
+                <div className="bg-slate-800 p-8 rounded-2xl border-y-4 border-yellow-500 shadow-inner h-40 overflow-hidden flex items-center">
+                  <div className="animate-pulse text-yellow-400">Câu {displayData.q}</div>
+                </div>
+              </div>
+            );
+          }
+
+          if (activeMode === 'colorful') {
+             return (
+                <div className="absolute inset-0 flex flex-col items-center justify-center transition-colors duration-100" style={{ backgroundColor: `hsl(${Math.random() * 360}, 70%, 20%)` }}>
+                  <h2 className={`text-7xl md:text-9xl font-black drop-shadow-2xl transition-transform duration-75 ${visualState}`}>{displayData.s}</h2>
+                  <div className="text-4xl font-bold mt-4 text-white/80">Câu hỏi: {displayData.q}</div>
+                </div>
+             )
+          }
+
+          return (
+            <div className={`text-center transition-all duration-100 ${visualState} ${activeMode === 'reveal' ? 'matrix-bg w-full h-full flex flex-col items-center justify-center' : ''}`}>
+              <div className="text-2xl text-slate-400 mb-4 tracking-widest uppercase font-semibold">Đang tìm kiếm...</div>
+              <div className="text-8xl md:text-[150px] font-black leading-none mb-4">{displayData.s}</div>
+              <div className="text-4xl md:text-6xl font-bold text-slate-300">Câu <span className="opacity-80">{displayData.q}</span></div>
+            </div>
+          );
+        }
+
+        // Khởi chạy App
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
