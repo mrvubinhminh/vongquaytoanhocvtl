@@ -816,10 +816,10 @@
                 </header>
 
                 {/* Main Content */}
-                <main className="flex-1 relative z-10 flex flex-col items-center justify-center p-4 md:p-6 lg:p-8">
+                <main className={`flex-1 relative z-10 flex flex-col items-center justify-center ${(appState === 'presentation' || appState === 'presentation_question_only') ? 'p-2 md:p-4 w-full max-w-full' : 'p-4 md:p-6 lg:p-8'}`}>
                   
                   {(appState === 'presentation' || appState === 'presentation_question_only') ? (
-                      <div className="w-full max-w-7xl min-h-[75vh] bg-slate-900 border-2 border-blue-500/50 rounded-[3rem] shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col items-center justify-center p-10 md:p-16 relative pt-24 animate-in fade-in zoom-in-95 duration-500">
+                      <div className="w-full min-h-[85vh] bg-slate-900 border-2 border-blue-500/50 rounded-[2rem] md:rounded-[3rem] shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col items-center justify-center p-6 md:p-12 lg:p-16 relative pt-24 animate-in fade-in zoom-in-95 duration-500">
                         
                         {/* Nút Đóng (Về Trạng Thái Chờ) */}
                         <button onClick={handleContinue} className="absolute top-6 right-6 p-3 bg-slate-800/50 hover:bg-red-500/80 rounded-full text-slate-300 hover:text-white transition-colors z-40" title="Đóng và Về Trạng Thái Chờ">
@@ -831,7 +831,7 @@
                           <div className="absolute top-8 left-8 z-30 flex flex-col items-start">
                             <button onClick={() => setShowHint(!showHint)} className={`p-4 rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.6)] ${showHint ? 'bg-yellow-500 text-slate-900 scale-110 shadow-[0_0_30px_rgba(250,204,21,0.8)]' : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/40 hover:scale-110 animate-pulse'}`} title="Xem Gợi Ý"><IconLightbulb /></button>
                             {showHint && (
-                              <div className="mt-4 max-w-2xl md:max-w-4xl lg:max-w-5xl w-[90vw] bg-slate-800/95 border-2 border-yellow-500/50 p-8 rounded-3xl shadow-[0_0_40px_rgba(250,204,21,0.2)] animate-in fade-in slide-in-from-top-4 text-left backdrop-blur-md">
+                              <div className="mt-4 max-w-2xl md:max-w-4xl lg:max-w-7xl w-[90vw] bg-slate-800/95 border-2 border-yellow-500/50 p-8 rounded-3xl shadow-[0_0_40px_rgba(250,204,21,0.2)] animate-in fade-in slide-in-from-top-4 text-left backdrop-blur-md z-50">
                                 <div className="text-yellow-400 font-bold mb-4 uppercase tracking-widest text-lg border-b border-yellow-500/30 pb-3 flex items-center gap-2"><IconLightbulb /> Gợi ý giải</div>
                                 <div className="text-white text-3xl md:text-4xl lg:text-5xl leading-relaxed"><MathText text={currentResult.questionData.h} /></div>
                               </div>
@@ -857,12 +857,12 @@
                                 Trình Chiếu Câu Hỏi
                               </div>
                             )}
-                            <div className="text-5xl md:text-7xl lg:text-8xl font-semibold leading-normal text-white w-full px-6">
+                            <div className="text-5xl md:text-7xl lg:text-8xl font-semibold leading-normal text-white w-full px-2">
                               <MathText text={currentResult.questionData?.q || ''} />
                             </div>
                             {/* Phụ đề */}
                             {!showAnswer && currentResult.questionData?.sub && (
-                              <div className="text-2xl md:text-4xl lg:text-5xl text-slate-400 italic font-light animate-in fade-in duration-500 w-full px-6 max-w-5xl mt-6">
+                              <div className="text-2xl md:text-4xl lg:text-5xl text-slate-400 italic font-light animate-in fade-in duration-500 w-full px-2 max-w-none mt-6">
                                 <MathText text={currentResult.questionData.sub} />
                               </div>
                             )}
@@ -870,7 +870,7 @@
                           
                           {/* ĐÁP ÁN (Chỉ hiện trong chế độ presentation chuẩn) */}
                           {showAnswer && (
-                            <div className="text-5xl md:text-7xl lg:text-8xl font-bold text-green-400 animate-in slide-in-from-bottom-8 fade-in duration-500 w-full border-t border-slate-700/50 pt-16 px-6 mt-16">
+                            <div className="text-5xl md:text-7xl lg:text-8xl font-bold text-green-400 animate-in slide-in-from-bottom-8 fade-in duration-500 w-full border-t border-slate-700/50 pt-16 px-2 mt-16">
                               <span className="text-slate-500 text-3xl uppercase tracking-widest font-black block mb-8">Đáp Án</span>
                               <MathText text={currentResult.questionData?.a || ''} />
                             </div>
@@ -878,7 +878,7 @@
                         </div>
 
                         {/* NÚT TƯƠNG TÁC DƯỚI CÙNG */}
-                        <div className="mt-12 flex gap-6 w-full max-w-2xl">
+                        <div className="mt-12 flex gap-6 w-full max-w-4xl">
                           {appState === 'presentation_question_only' ? (
                              <button onClick={handleSpinStudentOnly} className="flex-1 py-6 md:py-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-[2rem] font-bold text-3xl md:text-4xl transition-all shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:-translate-y-2 text-white">
                                 Quay Chọn Học Sinh
