@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vòng quay Toán Thầy Lực</title>
+    <title>Vòng quay học tập tích cực</title>
     
     <!-- Cài đặt Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,6 +16,9 @@
     <!-- Thư viện Pháo hoa vật lý siêu thực -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+    <!-- Thư viện chụp màn hình xuất ảnh html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <!-- Cài đặt MathJax cho Công thức Toán -->
     <script>
       window.MathJax = {
@@ -25,9 +28,22 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
+    <!-- 6 Font Chữ Việt Nam Đẹp Nhất Từ Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #020617; color: #f1f5f9; }
         
+        /* Bộ Font Custom */
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        .font-opensans { font-family: 'Open Sans', sans-serif; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+        .font-lora { font-family: 'Lora', serif; }
+        .font-merriweather { font-family: 'Merriweather', serif; }
+        .font-nunito { font-family: 'Nunito', sans-serif; }
+
         /* Hiệu ứng Logo VTL đổi màu */
         @keyframes vtlColorChange {
             0% { filter: hue-rotate(0deg); box-shadow: 0 0 15px rgba(37,99,235,0.6); }
@@ -79,11 +95,27 @@
             40%, 60% { transform: translate3d(6px, 0, 0) rotate(4deg); }
         }
 
+        /* HIỆU ỨNG HỘP QUÀ LƠ LỬNG MỚI */
+        @keyframes floatBox {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float-box { animation: floatBox 3s ease-in-out infinite; }
+
         /* Custom Scrollbar cho thư viện */
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar { width: 8px; height: 8px;}
         .custom-scroll::-webkit-scrollbar-track { background: rgba(30, 41, 59, 0.5); border-radius: 10px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 10px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 1); }
+
+        /* CSS CHO IN ẤN (A4) */
+        @media print {
+            @page { margin: 10mm; size: A4 portrait; }
+            .no-print { display: none !important; }
+            .hide-on-print { display: none !important; }
+            body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
+            .print-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
+        }
     </style>
 </head>
 <body>
@@ -95,19 +127,24 @@
         // ==========================================
         // BỘ ICONS
         // ==========================================
-        const IconSettings = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>;
+        const IconSettings = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>;
         const IconPlay = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
-        const IconGift = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>;
+        const IconMonitor = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>;
+        const IconGift = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>;
+        const IconSkull = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M8 20v2h8v-2"/><path d="m12.5 17-.5-1-.5 1h1z"/><path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/></svg>;
         const IconRefresh = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>;
         const IconAperture = () => <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg>;
         const IconX = () => <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
         const IconLightbulb = () => <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>;
-        
-        // Icons cho Tree View
         const IconFolder = ({ isOpen }) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={isOpen ? "#fbbf24" : "none"} stroke={isOpen ? "#fbbf24" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>;
         const IconFile = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>;
         const IconTrash = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400 hover:text-red-300"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>;
         const IconSave = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>;
+        const IconPlus = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
+        const IconList = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>;
+        const IconDownload = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
+        const IconHelp = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
+        const IconPrint = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>;
 
         // ==========================================
         // CẤU HÌNH DỮ LIỆU & TIỆN ÍCH
@@ -132,17 +169,79 @@
           { id: 'fakeout', name: '7. Cú lừa (Dừng & quay tiếp)' },
         ];
 
-        // DANH SÁCH 8 PHẦN QUÀ HIỂN THỊ ĐẦY ĐỦ TRÊN MÀN HÌNH
-        const ALL_GIFTS = [
-          { id: 0, text: "1 ĐIỂM CỘNG TOÁN", icon: "🎁", color: "from-pink-400 to-rose-500" },
-          { id: 1, text: "3 ĐIỂM CỘNG TOÁN", icon: "🌟", color: "from-yellow-400 to-orange-500" },
-          { id: 2, text: "1 TRÀNG VỖ TAY", icon: "👏", color: "from-blue-400 to-cyan-500" },
-          { id: 3, text: "NHẢY TỰ DO 10 GIÂY", icon: "🕺", color: "from-purple-400 to-indigo-500" },
-          { id: 4, text: "KỂ 1 CHUYỆN CƯỜI", icon: "🤣", color: "from-green-400 to-emerald-500" },
-          { id: 5, text: "HÁT 1 ĐIỆP KHÚC", icon: "🎤", color: "from-red-400 to-rose-600" },
-          { id: 6, text: "LÀM MẶT XẤU CHỤP ẢNH", icon: "🤪", color: "from-teal-400 to-green-600" },
-          { id: 7, text: "THỤT DẦU 5 LẦN", icon: "💪", color: "from-orange-400 to-amber-600" },
+        // 8 LỚP VỎ BỌC THƯỞNG
+        const REWARD_BOXES = [
+          { id: 1, icon: '🦄', color: 'from-pink-400 to-purple-500', name: 'Hộp Kỳ Lân' },
+          { id: 2, icon: '🦖', color: 'from-green-400 to-emerald-600', name: 'Hộp Khủng Long' },
+          { id: 3, icon: '🦁', color: 'from-yellow-400 to-orange-500', name: 'Hộp Sư Tử' },
+          { id: 4, icon: '🐰', color: 'from-blue-300 to-indigo-500', name: 'Hộp Thỏ Trắng' },
+          { id: 5, icon: '🐼', color: 'from-slate-600 to-slate-800', name: 'Hộp Gấu Trúc' },
+          { id: 6, icon: '🦊', color: 'from-orange-400 to-red-500', name: 'Hộp Cáo Nhỏ' },
+          { id: 7, icon: '🦉', color: 'from-sky-400 to-blue-600', name: 'Hộp Cú Mèo' },
+          { id: 8, icon: '🐶', color: 'from-amber-400 to-orange-500', name: 'Hộp Cún Con' },
         ];
+
+        // 8 LỚP VỎ BỌC PHẠT
+        const PENALTY_BOXES = [
+          { id: 1, icon: '💣', color: 'from-slate-700 to-slate-900', name: 'Quả Bom Tròn' },
+          { id: 2, icon: '👻', color: 'from-purple-600 to-indigo-900', name: 'Bóng Ma Nhỏ' },
+          { id: 3, icon: '👾', color: 'from-pink-700 to-purple-900', name: 'Quái Vật' },
+          { id: 4, icon: '🌪️', color: 'from-gray-500 to-gray-800', name: 'Lốc Xoáy' },
+          { id: 5, icon: '🦂', color: 'from-red-800 to-black', name: 'Bọ Cạp Độc' },
+          { id: 6, icon: '🌩️', color: 'from-blue-800 to-slate-900', name: 'Sấm Sét' },
+          { id: 7, icon: '🦇', color: 'from-amber-700 to-stone-900', name: 'Dơi Đêm' },
+          { id: 8, icon: '🕸️', color: 'from-slate-600 to-black', name: 'Mạng Nhện' },
+        ];
+
+        // 10 GỢI Ý PHẦN THƯỞNG TÍCH CỰC
+        const SUGGESTED_REWARDS = [
+          { text: "Miễn bài tập về nhà 1 ngày", icon: "🎉", weight: 5 },
+          { text: "Được chọn chỗ ngồi 1 tiết", icon: "🪑", weight: 5 },
+          { text: "Cộng 1 điểm kiểm tra miệng", icon: "💯", weight: 10 },
+          { text: "Đổi 1 sticker/sao tích lũy", icon: "⭐", weight: 10 },
+          { text: "Một tràng pháo tay tán dương", icon: "👏", weight: 10 },
+          { text: "Phần thưởng nhỏ (kẹo, bánh...)", icon: "🍬", weight: 5 },
+          { text: "Được quyền bỏ qua 1 câu hỏi khó", icon: "🛡️", weight: 2 },
+          { text: "Được mở 1 bài nhạc yêu thích", icon: "🎵", weight: 5 },
+          { text: "Làm trợ lý thầy giáo 1 tiết", icon: "👑", weight: 2 },
+          { text: "Nhận lời khen về sổ liên lạc", icon: "💌", weight: 2 },
+        ];
+
+        // DANH SÁCH MẶC ĐỊNH
+        const DEFAULT_REWARDS = [
+          { id: 'r1', text: "1 ĐIỂM CỘNG TOÁN", icon: "🎁", color: "from-pink-400 to-rose-500", weight: 10 },
+          { id: 'r2', text: "2 ĐIỂM CỘNG TOÁN", icon: "🎉", color: "from-blue-400 to-indigo-500", weight: 5 },
+          { id: 'r3', text: "3 ĐIỂM CỘNG TOÁN", icon: "🌟", color: "from-yellow-400 to-orange-500", weight: 2 },
+          { id: 'r4', text: "1 TRÀNG VỖ TAY", icon: "👏", color: "from-teal-400 to-emerald-500", weight: 10 },
+          { id: 'r5', text: "NHẢY TỰ DO 10 GIÂY", icon: "🕺", color: "from-purple-400 to-indigo-500", weight: 5 },
+          { id: 'r6', text: "KỂ 1 CHUYỆN CƯỜI", icon: "🤣", color: "from-green-400 to-emerald-500", weight: 5 },
+          { id: 'r7', text: "HÁT 1 ĐIỆP KHÚC", icon: "🎤", color: "from-red-400 to-rose-600", weight: 5 },
+          { id: 'r8', text: "LÀM MẶT XẤU", icon: "🤪", color: "from-cyan-400 to-blue-600", weight: 5 },
+        ];
+
+        const DEFAULT_PENALTIES = [
+          { id: 'p1', text: "Viết lại nội dung bài học", icon: "✍️", color: "from-slate-500 to-slate-700", weight: 10 },
+          { id: 'p2', text: "Làm thêm bài tập tương tự", icon: "📚", color: "from-blue-500 to-blue-700", weight: 10 },
+          { id: 'p3', text: "Tự chuẩn bị câu hỏi cho bạn", icon: "🤔", color: "from-purple-500 to-purple-700", weight: 10 },
+          { id: 'p4', text: "Trình bày lại kiến thức", icon: "🗣️", color: "from-green-500 to-green-700", weight: 10 },
+          { id: 'p5', text: "Vẽ sơ đồ tư duy bài học", icon: "🗺️", color: "from-orange-500 to-orange-700", weight: 10 },
+          { id: 'p6', text: "1 DẤU X (Phạt Nặng)", icon: "❌", color: "from-red-600 to-red-800", weight: 90 }, 
+          { id: 'p7', text: "Tìm ví dụ thực tế liên quan", icon: "🌍", color: "from-teal-500 to-teal-700", weight: 10 },
+          { id: 'p8', text: "Quay video giải lại bài", icon: "📹", color: "from-pink-500 to-pink-700", weight: 10 },
+          { id: 'p9', text: "Làm phiếu học tập bổ sung", icon: "📝", color: "from-yellow-500 to-yellow-700", weight: 10 },
+          { id: 'p10', text: "Tự đánh giá, viết cam kết", icon: "🤝", color: "from-indigo-500 to-indigo-700", weight: 10 },
+        ];
+
+        // Hàm chọn ngẫu nhiên có trọng số
+        const getWeightedRandom = (items) => {
+            const totalWeight = items.reduce((sum, item) => sum + (Number(item.weight) || 1), 0);
+            let random = Math.random() * totalWeight;
+            for (let item of items) {
+                random -= (Number(item.weight) || 1);
+                if (random <= 0) return item;
+            }
+            return items[items.length - 1]; 
+        };
 
         const MOTIVATIONAL_QUOTES = [
           "Học, học nữa, học mãi.",
@@ -185,10 +284,10 @@
         ];
 
         const BACKGROUND_IMAGES = [
-          "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80", // 1. Hoa hướng dương rực rỡ
-          "https://images.unsplash.com/photo-1495344517868-8ebaf0a2044e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80", // 2. Thảo nguyên xanh và mây trắng bình yên
-          "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80", // 3. Bình minh trên núi rực rỡ năng lượng
-          "https://images.unsplash.com/photo-1501854140801-50d01698950b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"  // 4. Thiên nhiên hùng vĩ tươi sáng
+          "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80", 
+          "https://images.unsplash.com/photo-1495344517868-8ebaf0a2044e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80", 
+          "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80", 
+          "https://images.unsplash.com/photo-1501854140801-50d01698950b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"  
         ];
 
         // Component Xử lý MathJax
@@ -200,7 +299,7 @@
             }
           }, [text]);
           const safeText = text != null ? String(text) : '';
-          return <span ref={nodeRef} className="inline-block text-left" dangerouslySetInnerHTML={{ __html: safeText.replace(/\n/g, '<br/>') }} />;
+          return <span ref={nodeRef} dangerouslySetInnerHTML={{ __html: safeText.replace(/\n/g, '<br/>') }} />;
         };
 
         const parseCSV = (str) => {
@@ -237,19 +336,14 @@
           </svg>
         );
 
-        // Hàm bắn pháo hoa chân thật bằng Canvas Confetti
         const fireRealisticFireworks = () => {
             const duration = 10 * 1000;
             const animationEnd = Date.now() + duration;
             const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
-
             function randomInRange(min, max) { return Math.random() * (max - min) + min; }
-
             const interval = setInterval(function() {
                 const timeLeft = animationEnd - Date.now();
-                if (timeLeft <= 0) {
-                    return clearInterval(interval);
-                }
+                if (timeLeft <= 0) return clearInterval(interval);
                 const particleCount = 60 * (timeLeft / duration);
                 confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
                 confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
@@ -261,13 +355,27 @@
         // COMPONENT APP CHÍNH
         // ==========================================
         function App() {
-          const [settings, setSettings] = useState({ students: 48, questions: 20, sheetId: '' });
+          const [settings, setSettings] = useState({ 
+            students: 48, 
+            questions: 20, 
+            sheetId: '',
+            rewards: DEFAULT_REWARDS,
+            penalties: DEFAULT_PENALTIES
+          });
           
-          // State cho Modal Cài Đặt
+          // State Modal
           const [showSettings, setShowSettings] = useState(false);
+          const [settingsTab, setSettingsTab] = useState('general');
           const [localSettings, setLocalSettings] = useState(settings);
+          const [showHelp, setShowHelp] = useState(false);
+          const [showPrintPreview, setShowPrintPreview] = useState(false);
           
-          // State cho Thư viện Bài học
+          // Print States
+          const [printFont, setPrintFont] = useState('font-roboto');
+          const [printLines, setPrintLines] = useState(2);
+
+          // State Thư viện & Câu hỏi đầy đủ cho In ấn
+          const [allQuestions, setAllQuestions] = useState([]);
           const [savedSheets, setSavedSheets] = useState(() => {
             const saved = localStorage.getItem('vtl_saved_sheets');
             return saved ? JSON.parse(saved) : [];
@@ -279,25 +387,26 @@
           const [poolStudents, setPoolStudents] = useState([]);
           const [poolQuestions, setPoolQuestions] = useState([]);
           const [selectedMode, setSelectedMode] = useState('random');
-          const [appState, setAppState] = useState('idle'); // idle, spinning, result, presentation, completed
+          const [appState, setAppState] = useState('idle');
           const [currentResult, setCurrentResult] = useState({ student: null, question: null, questionData: null });
           const [showAnswer, setShowAnswer] = useState(false);
           const [showHint, setShowHint] = useState(false);
           
-          // Cập nhật State cho Hộp Quà Bí Ẩn
-          const [giftModal, setGiftModal] = useState({ show: false, status: 'menu', activeIndex: -1, finalGift: null });
+          // State Hộp Quà / Tổng kết
+          const [giftModal, setGiftModal] = useState({ show: false, type: 'reward', status: 'menu', activeIndex: -1, revealedBoxIndex: -1, finalGift: null });
+          const [sessionResults, setSessionResults] = useState([]);
+          const [showSummary, setShowSummary] = useState(false);
+
           const applauseAudioRef = useRef(null);
 
           const [idleQuote, setIdleQuote] = useState(MOTIVATIONAL_QUOTES[0]);
           const [idleBg, setIdleBg] = useState(BACKGROUND_IMAGES[0]);
 
-          // Cài đặt âm thanh và dữ liệu ban đầu
           useEffect(() => {
             applauseAudioRef.current = new Audio('https://actions.google.com/sounds/v1/crowds/light_applause.ogg');
             initPools(settings.students, settings.questions, settings.sheetId);
           }, [settings.students, settings.questions, settings.sheetId]);
 
-          // Random câu thành ngữ và hình nền khi ở màn hình Sẵn sàng
           useEffect(() => {
             if (appState === 'idle') {
               setIdleQuote(MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)]);
@@ -305,17 +414,14 @@
             }
           }, [appState]);
 
-          // Lưu thư viện mỗi khi có thay đổi
           useEffect(() => {
             localStorage.setItem('vtl_saved_sheets', JSON.stringify(savedSheets));
           }, [savedSheets]);
 
-          // Đồng bộ localSettings khi mở Modal Cài đặt
           useEffect(() => {
             if (showSettings) setLocalSettings(settings);
           }, [showSettings, settings]);
 
-          // Lắng nghe sự kiện bấm phím F để Fullscreen
           useEffect(() => {
             const handleKeyDown = (e) => {
               if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
@@ -343,17 +449,28 @@
                 let startIndex = (data[0] && data[0][0] && data[0][0].toLowerCase().includes('câu')) ? 1 : 0;
                 const qs = [];
                 for(let i=startIndex; i<data.length; i++) {
-                   if(data[i][0]) qs.push({ id: i + 1 - startIndex, q: data[i][0], a: data[i][1] || '(Không có đáp án)', h: data[i][2] || '' });
+                   if(data[i][0]) qs.push({ 
+                       id: i + 1 - startIndex, 
+                       q: data[i][0], 
+                       a: data[i][1] || '(Không có đáp án)', 
+                       h: data[i][2] || '',
+                       sub: data[i][3] || '' 
+                   });
                 }
                 if (qs.length === 0) throw new Error("Sheet rỗng");
                 setPoolQuestions(qs);
+                setAllQuestions(qs);
               } catch(e) {
                 console.error("Lỗi Google Sheet:", e);
                 alert("Lỗi tải Google Sheet. Đang sử dụng câu hỏi mặc định.");
-                setPoolQuestions(Array.from({ length: questionCount }, (_, i) => ({ id: i + 1, q: `Câu hỏi mặc định số ${i + 1}`, a: `Đáp án ${i + 1}` })));
+                const fallbackQs = Array.from({ length: questionCount }, (_, i) => ({ id: i + 1, q: `Câu hỏi mặc định số ${i + 1}`, a: `Đáp án ${i + 1}` }));
+                setPoolQuestions(fallbackQs);
+                setAllQuestions(fallbackQs);
               }
             } else {
-              setPoolQuestions(Array.from({ length: questionCount }, (_, i) => ({ id: i + 1, q: `Câu hỏi mặc định số ${i + 1}`, a: `Đáp án của câu hỏi ${i + 1}` })));
+              const defaultQs = Array.from({ length: questionCount }, (_, i) => ({ id: i + 1, q: `Câu hỏi mặc định số ${i + 1}`, a: `Đáp án của câu hỏi ${i + 1}` }));
+              setPoolQuestions(defaultQs);
+              setAllQuestions(defaultQs);
             }
 
             setAppState('idle');
@@ -370,24 +487,54 @@
           };
 
           const handleApplySettings = (e) => {
-            e.preventDefault();
+            if (e) e.preventDefault();
             const s = parseInt(localSettings.students);
             const q = parseInt(localSettings.questions || 20);
             const sId = (localSettings.sheetId || '').trim();
             if (s > 0 && q > 0) {
-              setSettings({ students: s, questions: q, sheetId: sId });
+              setSettings({ ...localSettings, students: s, questions: q, sheetId: sId });
               setShowSettings(false);
             }
           };
 
-          // Các chức năng Thư viện
+          const handleUpdateItem = (type, index, field, value) => {
+             const newItems = [...localSettings[type]];
+             newItems[index] = { ...newItems[index], [field]: value };
+             setLocalSettings({ ...localSettings, [type]: newItems });
+          };
+          const handleAddItem = (type) => {
+             const newItem = { id: Date.now().toString(), text: "Mục mới", icon: "✨", color: "from-blue-500 to-purple-500", weight: 10 };
+             setLocalSettings({ ...localSettings, [type]: [...localSettings[type], newItem] });
+          };
+          const handleRemoveItem = (type, index) => {
+             const newItems = localSettings[type].filter((_, i) => i !== index);
+             setLocalSettings({ ...localSettings, [type]: newItems });
+          };
+
+          const handleAddSuggestedReward = (sug) => {
+             const newItem = { 
+               id: Date.now().toString() + Math.random(), 
+               text: sug.text, 
+               icon: sug.icon, 
+               color: "from-blue-500 to-purple-500", 
+               weight: sug.weight 
+             };
+             setLocalSettings({ ...localSettings, rewards: [...localSettings.rewards, newItem] });
+          };
+
           const handleSaveToLibrary = () => {
             const currentId = (localSettings.sheetId || '').trim();
             if (!currentId) return alert('Vui lòng nhập ID Google Sheet trước khi lưu!');
             if (!saveForm.name.trim()) return alert('Vui lòng nhập Tên bài học!');
             
-            const newSheet = { id: currentId, name: saveForm.name.trim(), grade: saveForm.grade, timestamp: Date.now() };
-            // Xoá id cũ nếu bị trùng và thêm cái mới
+            const newSheet = { 
+               id: currentId, 
+               name: saveForm.name.trim(), 
+               grade: saveForm.grade, 
+               timestamp: Date.now(),
+               rewards: localSettings.rewards,
+               penalties: localSettings.penalties
+            };
             setSavedSheets(prev => [...prev.filter(s => s.id !== currentId), newSheet]);
             setSaveForm(prev => ({ ...prev, name: '' }));
             setExpandedGrades(prev => ({...prev, [saveForm.grade]: true}));
@@ -400,19 +547,27 @@
           };
 
           const handleLoadSavedSheet = (id) => {
-            setLocalSettings(prev => ({ ...prev, sheetId: id }));
+            const sheet = savedSheets.find(s => s.id === id);
+            if (sheet) {
+               setLocalSettings(prev => ({ 
+                  ...prev, 
+                  sheetId: id,
+                  rewards: sheet.rewards || DEFAULT_REWARDS,
+                  penalties: sheet.penalties || DEFAULT_PENALTIES
+               }));
+            }
           };
 
           const toggleGradeTree = (grade) => {
             setExpandedGrades(prev => ({...prev, [grade]: !prev[grade]}));
           };
 
+          // --- QUAY SỐ THƯỜNG ---
           const handleSpin = async () => {
             if (appState === 'spinning') return;
-            if (poolQuestions.length === 0) return; // Đã xử lý hết ở hàm "Tiếp tục quay"
+            if (poolQuestions.length === 0) return;
 
             let currentStudentsPool = [...poolStudents];
-
             const sIdx = Math.floor(Math.random() * currentStudentsPool.length);
             const qIdx = Math.floor(Math.random() * poolQuestions.length);
             
@@ -428,8 +583,6 @@
             
             setAppState('result');
             playApplause();
-            
-            // Bắn pháo hoa đơn giản lúc ra kết quả
             confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
             
             setTimeout(() => {
@@ -437,6 +590,45 @@
               setShowAnswer(false);
               setShowHint(false);
             }, 2500);
+          };
+
+          // --- TRÌNH CHIẾU CÂU HỎI TRƯỚC ---
+          const handlePresentQuestionFirst = () => {
+             if (poolQuestions.length === 0) return;
+             
+             // Bốc câu hỏi ngẫu nhiên và Xoá luôn khỏi pool
+             const qIdx = Math.floor(Math.random() * poolQuestions.length);
+             const targetQuestion = poolQuestions[qIdx];
+             const newPoolQuestions = poolQuestions.filter((_, i) => i !== qIdx);
+             
+             setPoolQuestions(newPoolQuestions);
+             setCurrentResult({ student: null, question: targetQuestion.id, questionData: targetQuestion });
+             
+             setAppState('presentation_question_only');
+             setShowAnswer(false);
+             setShowHint(false);
+          };
+
+          // --- QUAY TÌM NGƯỜI TRẢ LỜI CHO CHẾ ĐỘ TRÌNH CHIẾU ---
+          const handleSpinStudentOnly = async () => {
+             if (poolStudents.length === 0) return;
+             
+             let currentStudentsPool = [...poolStudents];
+             const sIdx = Math.floor(Math.random() * currentStudentsPool.length);
+             const targetStudent = currentStudentsPool[sIdx];
+             
+             setCurrentResult(prev => ({ ...prev, student: targetStudent }));
+             setAppState('spinning_student_only');
+             
+             await sleep(3800);
+             
+             setAppState('result_student_only');
+             playApplause();
+             confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+             
+             setTimeout(() => {
+                setAppState('presentation');
+             }, 2500);
           };
 
           const handleContinue = () => {
@@ -449,473 +641,801 @@
             }
           };
 
-          // LOGIC VÒNG QUAY PHẦN THƯỞNG MỚI
-          const handleSpinGift = async () => {
-            if (giftModal.status === 'spinning') return;
+          // --- QUAY HỘP QUÀ/PHẠT BÍ ẨN ---
+          const handleOpenSpecificGift = async (boxIndex) => {
+            if (giftModal.status !== 'menu') return;
 
-            setGiftModal(prev => ({ ...prev, status: 'spinning', activeIndex: -1, finalGift: null }));
+            setGiftModal(prev => ({ ...prev, status: 'opening', revealedBoxIndex: boxIndex, activeIndex: boxIndex }));
+            await sleep(2000);
+
+            const currentPool = giftModal.type === 'reward' ? settings.rewards : settings.penalties;
+            const selectedGift = getWeightedRandom(currentPool);
+
+            setGiftModal(prev => ({ 
+              ...prev, 
+              status: 'revealed', 
+              finalGift: selectedGift 
+            }));
             
-            const spinDuration = 4000; // Tổng thời gian quay: 4 giây
+            setSessionResults(prev => [...prev, {
+              id: Date.now() + Math.random(),
+              student: currentResult.student || 'Khách',
+              type: giftModal.type,
+              gift: selectedGift.text,
+              icon: selectedGift.icon
+            }]);
+
+            confetti({ particleCount: 250, spread: 150, origin: { y: 0.5 } });
+            if (selectedGift.text.includes("ĐIỂM CỘNG") || selectedGift.text.includes("VỖ TAY")) {
+              playApplause();
+            }
+          };
+
+          const handleSpinGift = async () => {
+            if (giftModal.status !== 'menu' && giftModal.status !== 'revealed') return;
+
+            setGiftModal(prev => ({ ...prev, status: 'spinning', activeIndex: -1, revealedBoxIndex: -1, finalGift: null }));
+            
+            const spinDuration = 4000; 
             const startTime = Date.now();
             let delay = 50;
             let currentIndex = 0;
             
-            // Chốt sẵn người thắng ngẫu nhiên ngay từ đầu
-            const winnerIndex = Math.floor(Math.random() * ALL_GIFTS.length);
+            const BOXES_LIST = giftModal.type === 'reward' ? REWARD_BOXES : PENALTY_BOXES;
+            const winnerBoxIndex = Math.floor(Math.random() * BOXES_LIST.length);
+            
+            const currentPool = giftModal.type === 'reward' ? settings.rewards : settings.penalties;
+            const selectedGift = getWeightedRandom(currentPool);
 
-            // Vòng lặp chạy viền sáng quanh các hộp quà
             while (Date.now() - startTime < spinDuration) {
-              currentIndex = (currentIndex + 1) % ALL_GIFTS.length;
+              currentIndex = (currentIndex + 1) % BOXES_LIST.length;
               setGiftModal(prev => ({ ...prev, activeIndex: currentIndex }));
               await sleep(delay);
               
               const elapsed = Date.now() - startTime;
-              if (elapsed > 1500) delay += 10; // Bắt đầu chậm dần
-              if (elapsed > 2500) delay += 30; // Chậm rõ rệt hơn
+              if (elapsed > 1500) delay += 10; 
+              if (elapsed > 2500) delay += 30; 
             }
 
-            // Ép vòng quay nhích từ từ đến trúng ô đã chốt
-            while (currentIndex !== winnerIndex) {
-               currentIndex = (currentIndex + 1) % ALL_GIFTS.length;
+            while (currentIndex !== winnerBoxIndex) {
+               currentIndex = (currentIndex + 1) % BOXES_LIST.length;
                setGiftModal(prev => ({ ...prev, activeIndex: currentIndex }));
                await sleep(delay);
-               delay += 60; // Rất chậm trước khi dừng hẳn
+               delay += 60; 
             }
 
-            // Hoàn tất, hiện hiệu ứng kết quả
-            setGiftModal(prev => ({ ...prev, status: 'revealed', activeIndex: winnerIndex, finalGift: ALL_GIFTS[winnerIndex] }));
+            setGiftModal(prev => ({ 
+              ...prev, 
+              status: 'revealed', 
+              activeIndex: winnerBoxIndex, 
+              revealedBoxIndex: winnerBoxIndex, 
+              finalGift: selectedGift 
+            }));
+            
+            setSessionResults(prev => [...prev, {
+              id: Date.now() + Math.random(),
+              student: currentResult.student || 'Khách',
+              type: giftModal.type,
+              gift: selectedGift.text,
+              icon: selectedGift.icon
+            }]);
+
             confetti({ particleCount: 250, spread: 150, origin: { y: 0.5 } });
-            if (winnerIndex === 2) playApplause(); // Nếu vào ô Tràng Vỗ Tay thì phát âm thanh
+            if (selectedGift.text.includes("ĐIỂM CỘNG") || selectedGift.text.includes("VỖ TAY")) {
+              playApplause();
+            }
+          };
+
+          const handleExportImage = () => {
+             const captureEl = document.getElementById('summary-capture');
+             const scroller = document.getElementById('summary-scroll');
+             
+             const oldAspect = captureEl.style.aspectRatio;
+             const oldOverflow = scroller.style.overflowY;
+             
+             captureEl.style.aspectRatio = 'auto';
+             scroller.style.overflowY = 'visible';
+             
+             html2canvas(captureEl, { backgroundColor: '#0f172a', scale: 2 }).then(canvas => {
+               const link = document.createElement('a');
+               link.download = `TongKet_HocTap_ThayLuc_${Date.now()}.png`;
+               link.href = canvas.toDataURL('image/png');
+               link.click();
+               
+               captureEl.style.aspectRatio = oldAspect;
+               scroller.style.overflowY = oldOverflow;
+             });
           };
 
           return (
-            <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col relative overflow-hidden">
-              
-              {/* Background Decor */}
-              <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[100px]"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[100px]"></div>
+            <>
+              <div className={`min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col relative overflow-hidden ${showPrintPreview ? 'hidden print:hidden' : 'hide-on-print'}`}>
+                
+                {/* Background Decor */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                  <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[100px]"></div>
+                  <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[100px]"></div>
+                </div>
+
+                {/* Màn Hình Hoàn Thành */}
+                {appState === 'completed' && (
+                  <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl animate-in fade-in duration-1000 p-4">
+                    <h1 className="text-4xl md:text-6xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 mb-12 text-center drop-shadow-[0_0_20px_rgba(236,72,153,0.5)] animate-bounce leading-tight">
+                      🎉 Chúc mừng các em đã hoàn thành <br/> bài học tuyệt vời này! 🎉
+                    </h1>
+                    <div className="text-[150px] md:text-[250px] sunflower-bloom drop-shadow-[0_0_80px_rgba(250,204,21,0.5)] relative">
+                      🌻
+                      <div className="absolute inset-0 bg-yellow-400/20 blur-3xl rounded-full"></div>
+                    </div>
+                    <div className="flex gap-4 mt-16">
+                      <button onClick={() => setShowSummary(true)} className="px-8 py-4 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 rounded-full text-indigo-300 font-bold text-xl backdrop-blur-sm transition-all hover:scale-105 flex items-center gap-2">
+                        <IconList /> Xem Tổng Kết
+                      </button>
+                      <button onClick={() => setShowSettings(true)} className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/30 rounded-full text-white font-bold text-xl backdrop-blur-sm transition-all hover:scale-105 flex items-center gap-2">
+                        <IconSettings /> Cài đặt bài mới
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Header (Redesigned Toolbar) */}
+                <header className="relative z-10 flex items-center justify-between p-4 md:px-8 border-b border-slate-800 bg-slate-950/60 backdrop-blur-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="vtl-logo w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-blue-600 rounded-full border border-white text-white font-black text-sm md:text-base tracking-tighter shadow-lg">VTL</div>
+                    <h1 className="text-xl md:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 hidden sm:block">
+                      Vòng quay học tập tích cực
+                    </h1>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 md:gap-3">
+                    {/* NÚT THƯỞNG */}
+                    <button onClick={() => setGiftModal({ show: true, type: 'reward', status: 'menu', activeIndex: -1, revealedBoxIndex: -1, finalGift: null })} className="flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 border border-pink-500/30 rounded-full transition-all text-sm md:text-base font-semibold backdrop-blur-md hover:scale-105">
+                      <IconGift /> <span className="hidden lg:inline">Thưởng</span>
+                    </button>
+                    
+                    {/* NÚT PHẠT */}
+                    <button onClick={() => setGiftModal({ show: true, type: 'penalty', status: 'menu', activeIndex: -1, revealedBoxIndex: -1, finalGift: null })} className="flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-full transition-all text-sm md:text-base font-semibold backdrop-blur-md hover:scale-105">
+                      <IconSkull /> <span className="hidden lg:inline">Phạt</span>
+                    </button>
+                    
+                    {/* NÚT TỔNG KẾT */}
+                    <button onClick={() => setShowSummary(true)} className="flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-full transition-all text-sm md:text-base font-semibold backdrop-blur-md hover:scale-105">
+                      <IconList /> <span className="hidden lg:inline">Tổng kết</span>
+                    </button>
+
+                    {/* NÚT CÀI ĐẶT */}
+                    <button onClick={() => setShowSettings(true)} className="flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 bg-slate-500/10 hover:bg-slate-500/20 text-slate-300 border border-slate-500/30 rounded-full transition-all text-sm md:text-base font-semibold backdrop-blur-md hover:scale-105">
+                      <IconSettings /> <span className="hidden lg:inline">Cài đặt</span>
+                    </button>
+
+                    {/* NÚT HƯỚNG DẪN MỚI */}
+                    <button onClick={() => setShowHelp(true)} className="flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full transition-all text-sm md:text-base font-semibold backdrop-blur-md hover:scale-105 ml-1 md:ml-2">
+                      <IconHelp /> <span className="hidden lg:inline">Hướng dẫn</span>
+                    </button>
+                  </div>
+                </header>
+
+                {/* Main Content */}
+                <main className="flex-1 relative z-10 flex flex-col items-center justify-center p-4 md:p-6 lg:p-8">
+                  
+                  {(appState === 'presentation' || appState === 'presentation_question_only') ? (
+                      <div className="w-full max-w-7xl min-h-[75vh] bg-slate-900 border-2 border-blue-500/50 rounded-[3rem] shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col items-center justify-center p-10 md:p-16 relative pt-24 animate-in fade-in zoom-in-95 duration-500">
+                        
+                        {/* Nút Đóng (Về Trạng Thái Chờ) */}
+                        <button onClick={handleContinue} className="absolute top-6 right-6 p-3 bg-slate-800/50 hover:bg-red-500/80 rounded-full text-slate-300 hover:text-white transition-colors z-40" title="Đóng và Về Trạng Thái Chờ">
+                           <IconX />
+                        </button>
+
+                        {/* Nút gợi ý */}
+                        {currentResult.questionData?.h && (
+                          <div className="absolute top-8 left-8 z-30 flex flex-col items-start">
+                            <button onClick={() => setShowHint(!showHint)} className={`p-4 rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.6)] ${showHint ? 'bg-yellow-500 text-slate-900 scale-110 shadow-[0_0_30px_rgba(250,204,21,0.8)]' : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/40 hover:scale-110 animate-pulse'}`} title="Xem Gợi Ý"><IconLightbulb /></button>
+                            {showHint && (
+                              <div className="mt-4 max-w-2xl md:max-w-4xl lg:max-w-5xl w-[90vw] bg-slate-800/95 border-2 border-yellow-500/50 p-8 rounded-3xl shadow-[0_0_40px_rgba(250,204,21,0.2)] animate-in fade-in slide-in-from-top-4 text-left backdrop-blur-md">
+                                <div className="text-yellow-400 font-bold mb-4 uppercase tracking-widest text-lg border-b border-yellow-500/30 pb-3 flex items-center gap-2"><IconLightbulb /> Gợi ý giải</div>
+                                <div className="text-white text-3xl md:text-4xl lg:text-5xl leading-relaxed"><MathText text={currentResult.questionData.h} /></div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Chỉ hiện Laure Wreath và Tên Học Sinh khi đã xác định học sinh (appState === presentation) */}
+                        {appState === 'presentation' && (
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex justify-center items-center">
+                            <LaurelWreath />
+                            <div className="relative z-10 w-36 h-36 md:w-40 md:h-40 bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-600 rounded-full flex items-center justify-center border-4 border-slate-900 shadow-2xl">
+                              <span className="text-6xl md:text-7xl font-black text-slate-900 drop-shadow-md">{currentResult.student}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* CÂU HỎI */}
+                        <div className={`flex-1 w-full flex flex-col items-center text-center overflow-y-auto custom-scroll ${appState === 'presentation_question_only' ? 'justify-center' : 'justify-start pt-10'}`}>
+                          <div className="flex flex-col items-center justify-center w-full gap-6 lg:gap-10">
+                            {appState === 'presentation_question_only' && (
+                              <div className="inline-block px-8 py-3 mb-4 rounded-full bg-emerald-500/20 text-emerald-300 text-xl font-bold border border-emerald-500/30 uppercase tracking-widest">
+                                Trình Chiếu Câu Hỏi
+                              </div>
+                            )}
+                            <div className="text-5xl md:text-7xl lg:text-8xl font-semibold leading-normal text-white w-full px-6">
+                              <MathText text={currentResult.questionData?.q || ''} />
+                            </div>
+                            {/* Phụ đề */}
+                            {!showAnswer && currentResult.questionData?.sub && (
+                              <div className="text-2xl md:text-4xl lg:text-5xl text-slate-400 italic font-light animate-in fade-in duration-500 w-full px-6 max-w-5xl mt-6">
+                                <MathText text={currentResult.questionData.sub} />
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* ĐÁP ÁN (Chỉ hiện trong chế độ presentation chuẩn) */}
+                          {showAnswer && (
+                            <div className="text-5xl md:text-7xl lg:text-8xl font-bold text-green-400 animate-in slide-in-from-bottom-8 fade-in duration-500 w-full border-t border-slate-700/50 pt-16 px-6 mt-16">
+                              <span className="text-slate-500 text-3xl uppercase tracking-widest font-black block mb-8">Đáp Án</span>
+                              <MathText text={currentResult.questionData?.a || ''} />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* NÚT TƯƠNG TÁC DƯỚI CÙNG */}
+                        <div className="mt-12 flex gap-6 w-full max-w-2xl">
+                          {appState === 'presentation_question_only' ? (
+                             <button onClick={handleSpinStudentOnly} className="flex-1 py-6 md:py-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-[2rem] font-bold text-3xl md:text-4xl transition-all shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:-translate-y-2 text-white">
+                                Quay Chọn Học Sinh
+                             </button>
+                          ) : (
+                             <>
+                               {!showAnswer && <button onClick={() => setShowAnswer(true)} className="flex-1 py-6 md:py-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-[2rem] font-bold text-3xl md:text-4xl transition-all shadow-[0_0_30px_rgba(59,130,246,0.4)] hover:-translate-y-2 text-white">Xem Kết Quả</button>}
+                               {showAnswer && <button onClick={handleContinue} className="flex-1 py-6 md:py-8 bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 rounded-[2rem] font-bold text-3xl md:text-4xl transition-all text-white shadow-xl hover:-translate-y-2">Tiếp Tục Quay</button>}
+                             </>
+                          )}
+                        </div>
+                      </div>
+                  ) : appState === 'spinning_student_only' ? (
+                     <div className="w-full max-w-[98%] xl:max-w-[95%] 2xl:max-w-[90%] flex-1 min-h-[65vh] lg:min-h-[70vh] bg-slate-900 border-2 border-slate-800 rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col items-center justify-center mb-6 ring-1 ring-white/10">
+                        <SpinStudentEngine targetStudent={currentResult.student} totalStudents={settings.students} />
+                     </div>
+                  ) : appState === 'result_student_only' ? (
+                     <div className="w-full max-w-[98%] xl:max-w-[95%] 2xl:max-w-[90%] flex-1 min-h-[65vh] lg:min-h-[70vh] bg-slate-900 border-2 border-slate-800 rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col items-center justify-center mb-6 ring-1 ring-white/10 animate-in zoom-in duration-500">
+                        <div className="inline-block px-8 py-3 mb-8 rounded-full bg-emerald-500/20 text-emerald-300 text-xl md:text-2xl font-semibold border border-emerald-500/30 uppercase tracking-widest">
+                          Người Trả Lời
+                        </div>
+                        <h2 className="text-[120px] md:text-[200px] lg:text-[250px] font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-green-400 drop-shadow-xl mb-8 leading-none">
+                          Học sinh {currentResult.student}
+                        </h2>
+                     </div>
+                  ) : appState !== 'completed' && (
+                    <>
+                      {/* MÀN HÌNH CHỜ IDLE / QUAY THƯỜNG / RESULT THƯỜNG */}
+                      <div className="w-full max-w-[98%] xl:max-w-[95%] 2xl:max-w-[90%] flex-1 min-h-[65vh] lg:min-h-[70vh] bg-slate-900 border-2 border-slate-800 rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col items-center justify-center mb-6 ring-1 ring-white/10">
+                        {appState === 'idle' && (
+                          <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center">
+                            <div className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-[30s] hover:scale-110" style={{ backgroundImage: `url('${idleBg}')` }}></div>
+                            <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-[1px]"></div>
+                            <div className="relative z-20 text-center px-10 w-full flex flex-col items-center justify-center h-full">
+                              <h2 className="text-5xl md:text-7xl lg:text-8xl font-black text-yellow-400 mb-10 leading-snug tracking-wide max-w-7xl mx-auto" style={{ textShadow: '4px 4px 0 #000, -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 0px 15px 30px rgba(0,0,0,0.9)' }}>
+                                "{idleQuote}"
+                              </h2>
+                              <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-slate-900/60 border border-white/30 backdrop-blur-md shadow-[0_0_30px_rgba(0,0,0,0.6)] animate-pulse">
+                                <div className="w-4 h-4 rounded-full bg-green-400 animate-ping"></div>
+                                <p className="text-xl md:text-2xl text-white font-bold tracking-widest uppercase">Sẵn Sàng Quay Số</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {appState === 'spinning' && (
+                          <SpinEngine target={currentResult} mode={selectedMode} totalStudents={settings.students} totalQuestions={settings.questions} />
+                        )}
+
+                        {appState === 'result' && (
+                          <div className="text-center animate-in zoom-in duration-500">
+                            <div className="inline-block px-8 py-3 mb-8 rounded-full bg-blue-500/20 text-blue-300 text-xl md:text-2xl font-semibold border border-blue-500/30 uppercase tracking-widest">Người Được Chọn</div>
+                            <h2 className="text-[100px] md:text-[180px] lg:text-[220px] font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 drop-shadow-xl mb-8 leading-none">Học sinh {currentResult.student}</h2>
+                            <div className="text-5xl md:text-7xl lg:text-8xl font-bold text-slate-300 flex items-center justify-center gap-6 md:gap-8">
+                              <span className="text-slate-500">→</span>
+                              <span>Câu hỏi <span className="text-yellow-400">{currentResult.question}</span></span>
+                              <span className="text-slate-500">←</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* THANH CÔNG CỤ DƯỚI CÙNG (CÓ THÊM NÚT TRÌNH CHIẾU) */}
+                      <div className="w-full max-w-[98%] xl:max-w-[95%] 2xl:max-w-[90%] bg-slate-900/80 backdrop-blur-md p-4 md:p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-center gap-4 justify-between">
+                        <div className="flex gap-8 text-center md:text-left">
+                          <div><div className="text-base md:text-lg text-slate-400 mb-1">Tổng học sinh</div><div className="text-3xl md:text-4xl font-bold text-blue-400">{settings.students} <span className="text-lg text-slate-600 font-normal">HS</span></div></div>
+                          <div className="w-px bg-slate-700 hidden md:block"></div>
+                          <div><div className="text-base md:text-lg text-slate-400 mb-1">Câu hỏi còn lại</div><div className="text-3xl md:text-4xl font-bold text-yellow-400">{poolQuestions.length} <span className="text-lg text-slate-600 font-normal">Câu</span></div></div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                          <div className="relative w-full sm:w-48 lg:w-56">
+                            <select value={selectedMode} onChange={(e) => setSelectedMode(e.target.value)} disabled={appState === 'spinning'} className="w-full appearance-none bg-slate-800 border border-slate-700 text-slate-200 py-3 pl-4 pr-10 text-lg rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 cursor-pointer">
+                              {MODES.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                          </div>
+
+                          {/* NÚT TRÌNH CHIẾU CÂU HỎI MỚI */}
+                          <button onClick={handlePresentQuestionFirst} disabled={appState === 'spinning' || poolQuestions.length === 0} className={`w-full sm:w-auto px-6 py-3 md:py-4 rounded-xl font-bold text-lg md:text-xl uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${appState === 'spinning' ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : poolQuestions.length === 0 ? 'bg-red-900/50 text-red-500 cursor-not-allowed' : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] hover:-translate-y-1'}`}>
+                             {appState === 'spinning' ? 'Đang quay...' : poolQuestions.length === 0 ? 'Hết câu hỏi' : <><IconMonitor /> Trình Chiếu</>}
+                          </button>
+
+                          <button onClick={handleSpin} disabled={appState === 'spinning' || poolQuestions.length === 0} className={`w-full sm:w-auto px-6 py-3 md:py-4 rounded-xl font-bold text-lg md:text-xl uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${appState === 'spinning' ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : poolQuestions.length === 0 ? 'bg-red-900/50 text-red-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] hover:-translate-y-1'}`}>
+                            {appState === 'spinning' ? 'Đang quay...' : poolQuestions.length === 0 ? 'Hết câu hỏi' : <><IconPlay /> Quay Số</>}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </main>
+
+                {/* MODAL 8 HỘP QUÀ/PHẠT BÍ ẨN */}
+                {giftModal.show && (
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:p-6 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+                    <button onClick={() => setGiftModal({ show: false, status: 'menu', activeIndex: -1, revealedBoxIndex: -1, finalGift: null })} className="absolute top-4 right-4 lg:top-8 lg:right-8 p-4 bg-slate-800/50 hover:bg-slate-700 rounded-full text-white/50 hover:text-white transition-colors z-50"><IconX /></button>
+
+                    <div className="flex flex-col items-center justify-center w-full max-w-6xl h-full relative">
+                      <h2 className={`text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text lg:mb-2 animate-pulse drop-shadow-lg text-center uppercase tracking-wider ${giftModal.type === 'reward' ? 'bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400' : 'bg-gradient-to-r from-red-500 via-orange-500 to-yellow-600'}`}>
+                        {giftModal.type === 'reward' ? '🎁 Vòng Quay Phần Thưởng 🎁' : '💀 Vòng Quay Hình Phạt 💀'}
+                      </h2>
+                      
+                      {giftModal.status === 'menu' && (
+                          <p className={`text-xl mb-6 drop-shadow-md font-medium text-center px-4 ${giftModal.type === 'reward' ? 'text-yellow-200' : 'text-red-200'}`}>
+                             Bấm trực tiếp vào 1 hộp để mở, hoặc bấm nút "Bắt Đầu Quay" bên dưới!
+                          </p>
+                      )}
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 w-full px-2 max-h-[65vh] mt-4">
+                        {(giftModal.type === 'reward' ? REWARD_BOXES : PENALTY_BOXES).map((box, idx) => {
+                          const isSpinningActive = giftModal.status === 'spinning' && giftModal.activeIndex === idx;
+                          const isOpening = giftModal.status === 'opening' && giftModal.revealedBoxIndex === idx;
+                          const isWinner = giftModal.status === 'revealed' && giftModal.revealedBoxIndex === idx;
+                          const isLoser = giftModal.status === 'revealed' && giftModal.revealedBoxIndex !== idx;
+                          const isIdle = giftModal.status === 'menu';
+                          
+                          const displayIcon = isWinner ? giftModal.finalGift.icon : box.icon;
+                          const displayText = isWinner ? giftModal.finalGift.text : box.name;
+                          const displayColor = isWinner ? giftModal.finalGift.color : box.color;
+
+                          let boxClasses = `flex flex-col items-center justify-center p-4 lg:p-6 rounded-[2rem] transition-all duration-300 border-4 relative overflow-hidden z-10 w-full `;
+
+                          if (isIdle) {
+                              boxClasses += `bg-gradient-to-br ${box.color} border-white/20 animate-float-box hover:shadow-[0_0_40px_rgba(250,204,21,0.6)] cursor-pointer ${giftModal.type==='reward'?'hover:border-yellow-400':'hover:border-red-500 hover:shadow-[0_0_40px_rgba(239,68,68,0.6)]'}`;
+                          } else if (isSpinningActive) {
+                              boxClasses += `bg-white shadow-[0_0_50px_rgba(250,204,21,1)] scale-110 z-20 cursor-default ${giftModal.type==='reward'?'border-yellow-400':'border-red-500'}`;
+                          } else if (isOpening) {
+                              boxClasses += `bg-gradient-to-br ${box.color} border-yellow-400 shadow-[0_0_60px_rgba(250,204,21,0.8)] animate-intense-shake scale-110 z-30 cursor-default`;
+                          } else if (isWinner) {
+                              boxClasses += `bg-gradient-to-br ${displayColor} shadow-[0_0_80px_rgba(74,222,128,1)] animate-bounce scale-110 z-30 cursor-default ${giftModal.type==='reward'?'border-green-400':'border-red-500'}`;
+                          } else if (isLoser) {
+                              boxClasses += `bg-slate-800/80 border-slate-700 opacity-40 grayscale scale-95 z-0 cursor-default`;
+                          } else {
+                              boxClasses += `bg-gradient-to-br ${box.color} border-white/10 opacity-70 cursor-default`;
+                          }
+
+                          return (
+                            <div key={box.id} className="relative group w-full" style={{ animationDelay: `${idx * 0.15}s` }}>
+                              {isIdle && <div className={`absolute inset-0 bg-white/20 rounded-[2rem] blur-xl transition-colors animate-pulse z-0 ${giftModal.type==='reward'?'group-hover:bg-yellow-400/40':'group-hover:bg-red-500/40'}`} style={{ animationDelay: `${idx * 0.2}s` }}></div>}
+                              {isOpening && <div className={`absolute inset-0 rounded-[2rem] blur-2xl animate-pulse scale-125 z-0 ${giftModal.type==='reward'?'bg-yellow-400/60':'bg-red-500/60'}`}></div>}
+
+                              <button onClick={() => handleOpenSpecificGift(idx)} disabled={giftModal.status !== 'menu'} className={boxClasses} style={{ minHeight: '150px', animationDelay: isIdle ? `${idx * 0.2}s` : '0s' }}>
+                                <span className={`text-[50px] lg:text-[70px] leading-none mb-2 lg:mb-4 relative z-10 ${isWinner ? 'drop-shadow-2xl animate-pulse' : 'drop-shadow-lg'}`}>{displayIcon}</span>
+                                <span className={`text-center font-black text-sm lg:text-lg px-1 leading-tight relative z-10 ${isSpinningActive ? 'text-slate-900' : 'text-white'}`}>{displayText}</span>
+                              </button>
+                            </div>
+                          )
+                        })}
+                      </div>
+
+                      <div className="mt-8 lg:mt-10 h-24 flex flex-col items-center justify-center relative w-full">
+                        {(giftModal.status === 'menu' || giftModal.status === 'revealed') && (
+                          <button onClick={handleSpinGift} className={`px-12 py-4 lg:py-5 bg-gradient-to-r hover:scale-110 transition-all border-4 border-white/20 z-20 rounded-[2rem] font-black text-2xl lg:text-3xl text-white uppercase tracking-widest ${giftModal.type === 'reward' ? 'from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-[0_0_30px_rgba(37,99,235,0.5)] hover:shadow-[0_0_50px_rgba(37,99,235,0.8)]' : 'from-red-800 to-stone-900 hover:from-red-700 hover:to-stone-800 shadow-[0_0_30px_rgba(153,27,27,0.5)] hover:shadow-[0_0_50px_rgba(153,27,27,0.8)]'}`}>
+                            {giftModal.status === 'revealed' ? 'Quay Lại' : 'Hoặc Quay Ngẫu Nhiên'}
+                          </button>
+                        )}
+                        
+                        {giftModal.status === 'revealed' && giftModal.finalGift && (
+                          <div className={`absolute top-1/2 -translate-y-1/2 bg-slate-900/90 border-2 px-8 py-3 rounded-full text-center text-xl lg:text-3xl font-bold animate-in slide-in-from-bottom-8 whitespace-nowrap z-10 mt-16 lg:mt-20 ${giftModal.type === 'reward' ? 'border-yellow-500/50 text-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.3)]' : 'border-red-500/50 text-red-400 shadow-[0_0_30px_rgba(239,68,68,0.3)]'}`}>
+                            Kết quả: <span className="text-white ml-2">{giftModal.finalGift.text}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* BẢNG TỔNG KẾT THÀNH TÍCH CHUẨN TỈ LỆ 16:9 ĐỂ XUẤT ẢNH */}
+                {showSummary && (
+                  <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 lg:p-8 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+                    <button onClick={() => setShowSummary(false)} className="absolute top-4 right-4 lg:top-8 lg:right-8 p-4 bg-slate-800/50 hover:bg-slate-700 rounded-full text-white/50 hover:text-white transition-colors z-50">
+                      <IconX />
+                    </button>
+
+                    <div className="flex flex-col items-center w-full max-w-[1200px]">
+                      <div id="summary-capture" className="bg-slate-900 border-4 border-slate-700 rounded-3xl w-full relative overflow-hidden flex flex-col" style={{ aspectRatio: '16/9' }}>
+                        <div className="absolute inset-0 bg-cover bg-center opacity-10" style={{ backgroundImage: `url('${BACKGROUND_IMAGES[0]}')` }}></div>
+                        
+                        <div className="relative z-10 flex flex-col h-full p-8 md:p-10">
+                          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 mb-8 text-center uppercase tracking-wider">
+                            🏆 Bảng Vàng Tổng Kết 🏆
+                          </h2>
+                          
+                          <div id="summary-scroll" className="flex-1 overflow-y-auto custom-scroll pr-4 pb-4 h-full content-start">
+                             {sessionResults.length === 0 ? (
+                                <div className="text-center text-slate-400 text-2xl mt-20 italic">Chưa có dữ liệu nào được ghi nhận.</div>
+                             ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+                                  {sessionResults.map(res => (
+                                    <div key={res.id} className={`flex items-center gap-4 p-4 lg:p-6 rounded-2xl border-2 shadow-lg backdrop-blur-sm ${res.type === 'reward' ? 'bg-green-900/20 border-green-500/30 shadow-green-500/10' : 'bg-red-900/20 border-red-500/30 shadow-red-500/10'}`}>
+                                       <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-slate-800 flex items-center justify-center text-4xl lg:text-5xl shrink-0 border border-slate-700 shadow-inner">
+                                          {res.icon}
+                                       </div>
+                                       <div className="flex flex-col">
+                                          <span className="text-xl lg:text-3xl font-black text-white">Học sinh {res.student}</span>
+                                          <span className={`text-base lg:text-xl font-bold mt-1 ${res.type === 'reward' ? 'text-yellow-400' : 'text-red-400'}`}>
+                                            {res.gift}
+                                          </span>
+                                       </div>
+                                    </div>
+                                  ))}
+                                </div>
+                             )}
+                          </div>
+                          <div className="mt-4 text-right text-slate-500 text-sm font-semibold opacity-50">
+                             Tạo bởi: Vòng Quay Học Tập Tích Cực - Thầy Vũ Tiến Lực
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4 mt-6">
+                        <button onClick={handleExportImage} className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full font-bold text-xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] flex items-center gap-2 hover:scale-105">
+                          <IconDownload /> Xuất Ảnh (Lưu lại)
+                        </button>
+                        <button onClick={() => { if (window.confirm("Bạn có chắc chắn muốn xóa toàn bộ danh sách kết quả này?")) setSessionResults([]); }} className="px-6 py-4 bg-slate-800 hover:bg-red-900/80 border border-slate-700 text-slate-300 hover:text-red-300 rounded-full font-bold text-lg transition-all flex items-center gap-2">
+                          <IconTrash /> Xóa danh sách
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* MODAL CÀI ĐẶT */}
+                {showSettings && (
+                  <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+                    <div className="bg-slate-900 border-2 border-slate-700 rounded-3xl w-full max-w-6xl shadow-2xl flex flex-col h-[90vh]">
+                      <div className="p-6 border-b border-slate-800 flex justify-between items-start bg-slate-950 shrink-0">
+                        <div className="flex flex-col">
+                          <h3 className="text-3xl font-bold text-white flex items-center gap-3"><IconSettings /> Quản lý Bài Học & Cấu Hình</h3>
+                          <p className="text-slate-400 text-sm mt-2">Tác giả: Thầy Vũ Tiến Lực - Trường THPT Nguyễn Hữu Cảnh - TP Hồ Chí Minh</p>
+                        </div>
+                        <button onClick={() => setShowSettings(false)} className="text-slate-400 hover:text-white p-2 bg-slate-800 rounded-full transition-colors"><IconX /></button>
+                      </div>
+
+                      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2">
+                        <div className="border-r border-slate-800 flex flex-col min-h-0 h-full">
+                          <div className="flex bg-slate-950 border-b border-slate-800 px-8 pt-4 shrink-0">
+                             <button onClick={()=>setSettingsTab('general')} className={`pb-3 px-4 font-bold text-lg transition-colors ${settingsTab==='general' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-slate-500 hover:text-slate-300'}`}>Cài đặt chung</button>
+                             <button onClick={()=>setSettingsTab('rewards')} className={`pb-3 px-4 font-bold text-lg transition-colors ${settingsTab==='rewards' ? 'text-yellow-400 border-b-2 border-yellow-400' : 'text-slate-500 hover:text-slate-300'}`}>Phần thưởng</button>
+                             <button onClick={()=>setSettingsTab('penalties')} className={`pb-3 px-4 font-bold text-lg transition-colors ${settingsTab==='penalties' ? 'text-red-400 border-b-2 border-red-400' : 'text-slate-500 hover:text-slate-300'}`}>Hình phạt</button>
+                          </div>
+                          
+                          <div className="p-6 md:p-8 overflow-y-auto custom-scroll flex-1">
+                            {settingsTab === 'general' && (
+                               <div className="flex flex-col gap-6">
+                                  <h4 className="text-xl font-semibold text-blue-400 uppercase tracking-wider">Cấu hình Đang chạy</h4>
+                                  <div>
+                                    <label className="block text-base font-medium text-slate-400 mb-2">Tổng số học sinh (Không bị loại trừ)</label>
+                                    <input type="number" name="students" value={localSettings.students} onChange={e => setLocalSettings({...localSettings, students: e.target.value})} min="1" max="999" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-xl text-white focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
+                                  </div>
+                                  <div>
+                                    <label className="block text-base font-medium text-slate-400 mb-2">ID Google Sheet (Câu hỏi bài giảng)</label>
+                                    <input type="text" name="sheetId" value={localSettings.sheetId} onChange={e => setLocalSettings({...localSettings, sheetId: e.target.value})} placeholder="Nhập ID từ URL Google Sheet..." className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-lg text-white focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-600" />
+                                    <p className="text-xs text-slate-500 mt-2">Cột A: Câu hỏi | Cột B: Đáp án | Cột C: Gợi ý | Cột D: Phụ đề</p>
+                                  </div>
+                                  {!localSettings.sheetId && (
+                                    <div>
+                                      <label className="block text-base font-medium text-slate-400 mb-2">Số lượng câu hỏi mặc định (Sinh tự động)</label>
+                                      <input type="number" name="questions" value={localSettings.questions} onChange={e => setLocalSettings({...localSettings, questions: e.target.value})} min="1" max="999" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-xl text-white focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
+                                    </div>
+                                  )}
+
+                                  {/* --- NÚT XEM TRƯỚC & IN PHIẾU HỌC TẬP --- */}
+                                  <div className="mt-4 p-6 bg-emerald-900/10 border border-emerald-800/30 rounded-2xl">
+                                     <h5 className="text-emerald-300 font-medium mb-3 flex items-center gap-2"><IconPrint /> In Phiếu Học Tập</h5>
+                                     <p className="text-sm text-slate-400 mb-4">Tạo và in phiếu bài tập chuẩn A4 dựa trên dữ liệu Google Sheet hiện tại (tự động chia 2 cột, có dòng kẻ làm bài, tối ưu tiết kiệm mực in).</p>
+                                     <button type="button" onClick={() => { setShowSettings(false); setShowPrintPreview(true); }} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold py-3 transition-colors flex items-center justify-center gap-2">
+                                        <IconPrint /> Xem trước & In Phiếu
+                                     </button>
+                                  </div>
+                                  {/* -------------------------------------- */}
+
+                                  <div className="mt-2 p-6 bg-blue-900/10 border border-blue-800/30 rounded-2xl">
+                                     <h5 className="text-blue-300 font-medium mb-4 flex items-center gap-2"><IconSave /> Lưu bài học (kèm cài đặt Thưởng/Phạt hiện tại)</h5>
+                                     <div className="flex flex-col gap-3">
+                                        <input type="text" placeholder="Tên bài (VD: Ôn tập hàm số)" value={saveForm.name} onChange={e => setSaveForm({...saveForm, name: e.target.value})} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500" />
+                                        <div className="flex gap-3">
+                                           <select value={saveForm.grade} onChange={e => setSaveForm({...saveForm, grade: e.target.value})} className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none w-1/3">
+                                              {GRADES.map(g => <option key={g} value={g}>Khối {g}</option>)}
+                                           </select>
+                                           <button type="button" onClick={handleSaveToLibrary} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold py-2 transition-colors">Lưu Vào Thư Viện</button>
+                                        </div>
+                                     </div>
+                                  </div>
+                               </div>
+                            )}
+
+                            {(settingsTab === 'rewards' || settingsTab === 'penalties') && (() => {
+                               const listKey = settingsTab === 'rewards' ? 'rewards' : 'penalties';
+                               const colorScheme = settingsTab === 'rewards' ? 'yellow' : 'red';
+                               return (
+                                 <div className="space-y-4 pb-4">
+                                   {settingsTab === 'rewards' && (
+                                     <div className="mb-6 border-b border-slate-700 pb-6">
+                                       <h5 className="text-yellow-400 font-bold mb-3 text-sm flex items-center gap-2"><IconLightbulb/> Gợi ý phần thưởng tích cực (Click để chọn)</h5>
+                                       <div className="flex flex-wrap gap-2">
+                                         {SUGGESTED_REWARDS.map((sug, i) => (
+                                            <button key={i} type="button" onClick={() => handleAddSuggestedReward(sug)} className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-full text-xs font-semibold text-slate-300 transition-colors flex items-center gap-1 shadow-sm">
+                                              <span className="text-sm">{sug.icon}</span> {sug.text}
+                                            </button>
+                                         ))}
+                                       </div>
+                                     </div>
+                                   )}
+
+                                   <div className="flex justify-between items-center mb-4">
+                                      <p className="text-sm text-slate-400">Điều chỉnh nội dung và tỷ lệ (trọng số) xuất hiện.</p>
+                                      <button type="button" onClick={() => handleAddItem(listKey)} className={`flex items-center gap-1 px-3 py-1.5 bg-${colorScheme}-500/20 text-${colorScheme}-400 rounded-lg hover:bg-${colorScheme}-500/40 transition-colors text-sm font-bold`}>
+                                         <IconPlus /> Thêm Mục
+                                      </button>
+                                   </div>
+                                   {localSettings[listKey].map((item, idx) => (
+                                      <div key={item.id} className="flex flex-wrap gap-2 items-center bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+                                         <input type="text" value={item.icon} onChange={(e) => handleUpdateItem(listKey, idx, 'icon', e.target.value)} className="w-12 h-10 bg-slate-900 border border-slate-700 rounded text-center text-xl" title="Icon (Emoji)" />
+                                         <input type="text" value={item.text} onChange={(e) => handleUpdateItem(listKey, idx, 'text', e.target.value)} className="flex-1 min-w-[150px] bg-slate-900 border border-slate-700 rounded px-3 py-2 text-white text-sm" placeholder="Nội dung..." />
+                                         <div className="flex items-center gap-2">
+                                            <span className="text-xs text-slate-400">Tỷ lệ:</span>
+                                            <input type="number" value={item.weight} onChange={(e) => handleUpdateItem(listKey, idx, 'weight', parseInt(e.target.value)||1)} className="w-16 bg-slate-900 border border-slate-700 rounded px-2 py-2 text-white text-sm text-center" min="1" title="Trọng số (càng cao càng dễ ra)" />
+                                         </div>
+                                         <button type="button" onClick={() => handleRemoveItem(listKey, idx)} className="p-2 text-slate-500 hover:text-red-400 bg-slate-900 rounded"><IconTrash /></button>
+                                      </div>
+                                   ))}
+                                 </div>
+                               );
+                            })()}
+                          </div>
+                          
+                          <div className="p-6 border-t border-slate-800 bg-slate-900 shrink-0">
+                             <button onClick={handleApplySettings} className="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg hover:from-blue-500 hover:to-indigo-500 transition-colors shadow-lg">Áp Dụng Thay Đổi & Tải Bài</button>
+                          </div>
+                        </div>
+
+                        {/* Cột phải: Cây Thư Viện Bài Học */}
+                        <div className="p-6 md:p-8 bg-slate-950/50 overflow-y-auto custom-scroll h-full">
+                          <h4 className="text-xl font-semibold text-yellow-400 mb-6 uppercase tracking-wider">Thư viện Bài Học (Lưu trữ)</h4>
+                          {savedSheets.length === 0 ? (
+                             <div className="text-center text-slate-500 py-10 border-2 border-dashed border-slate-800 rounded-2xl">
+                                <IconFolder isOpen={false} />
+                                <p className="mt-4">Chưa có bài học nào được lưu.</p>
+                             </div>
+                          ) : (
+                             <div className="flex flex-col gap-2">
+                               {GRADES.map(grade => {
+                                  const sheetsInGrade = savedSheets.filter(s => s.grade === grade);
+                                  if (sheetsInGrade.length === 0) return null;
+                                  const isOpen = expandedGrades[grade];
+                                  return (
+                                     <div key={grade} className="bg-slate-800/40 rounded-xl border border-slate-700/50 overflow-hidden transition-all">
+                                        <button onClick={() => toggleGradeTree(grade)} className={`w-full flex items-center gap-3 px-5 py-4 text-left font-bold transition-colors ${isOpen ? 'bg-slate-800 text-yellow-400' : 'hover:bg-slate-800 text-slate-300'}`}>
+                                           <IconFolder isOpen={isOpen} /> 
+                                           <span className="text-lg">Khối {grade}</span>
+                                           <span className="ml-auto text-xs bg-slate-900 px-2 py-1 rounded-full text-slate-400">{sheetsInGrade.length} bài</span>
+                                        </button>
+                                        {isOpen && (
+                                           <div className="p-3 bg-slate-900/50 flex flex-col gap-2">
+                                              {sheetsInGrade.map(sheet => (
+                                                 <div key={sheet.id} className={`flex items-center justify-between p-3 rounded-lg border border-slate-700/50 transition-all ${localSettings.sheetId === sheet.id ? 'bg-blue-600/20 border-blue-500/50' : 'bg-slate-800 hover:bg-slate-700'}`}>
+                                                    <div className="flex items-center gap-3 flex-1 cursor-pointer" onClick={() => handleLoadSavedSheet(sheet.id)}>
+                                                       <div className={localSettings.sheetId === sheet.id ? 'text-blue-400' : 'text-slate-400'}><IconFile /></div>
+                                                       <div className="flex flex-col"><span className={`font-medium ${localSettings.sheetId === sheet.id ? 'text-blue-300' : 'text-slate-200'}`}>{sheet.name}</span></div>
+                                                    </div>
+                                                    <button onClick={() => handleDeleteSavedSheet(sheet.id)} className="p-2 bg-slate-900 rounded-lg hover:bg-red-500/20 transition-colors ml-3" title="Xoá bài học này"><IconTrash /></button>
+                                                 </div>
+                                              ))}
+                                           </div>
+                                        )}
+                                     </div>
+                                  );
+                               })}
+                             </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* MODAL HƯỚNG DẪN & MẸO */}
+                {showHelp && (
+                  <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 lg:p-8 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-slate-900 border-2 border-slate-700 rounded-3xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh]">
+                       <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950 shrink-0">
+                           <h3 className="text-2xl font-bold text-emerald-400 flex items-center gap-3"><IconHelp /> Cẩm Nang & Mẹo Dạy Học</h3>
+                           <button onClick={() => setShowHelp(false)} className="text-slate-400 hover:text-white p-2 bg-slate-800 rounded-full transition-colors"><IconX /></button>
+                       </div>
+                       <div className="p-6 md:p-10 overflow-y-auto custom-scroll space-y-10">
+                           <section>
+                              <h4 className="text-xl font-bold text-white mb-4 border-l-4 border-blue-500 pl-3">📖 Hướng Dẫn Sử Dụng</h4>
+                              <ul className="space-y-4 text-slate-300">
+                                 <li className="flex gap-3"><div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 font-bold text-sm">1</div> <span><strong>Chuẩn bị Bài học:</strong> Vào <b>Cài đặt</b>, nhập tổng số học sinh. Nếu muốn dùng bộ câu hỏi riêng, dán ID của Google Sheet vào.</span></li>
+                                 <li className="flex gap-3"><div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 font-bold text-sm">2</div> <span><strong>Cấu trúc Google Sheet:</strong> Bảng cần có quyền <em>"Bất kỳ ai có liên kết"</em>. Cột A: Câu hỏi, Cột B: Đáp án, Cột C: Gợi ý (hiện bóng đèn), Cột D: Phụ đề (chữ nhỏ dưới câu hỏi). Cả 4 cột đều hỗ trợ gõ công thức Toán học `$...$`.</span></li>
+                                 <li className="flex gap-3"><div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 font-bold text-sm">3</div> <span><strong>Quay Số:</strong> Ở màn hình chính, chọn Chế độ quay và bấm <b>Quay Số</b> để chọn ngẫu nhiên 1 bạn học sinh trả lời câu hỏi.</span></li>
+                                 <li className="flex gap-3"><div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 font-bold text-sm">4</div> <span><strong>Thưởng & Phạt:</strong> Sử dụng 2 nút <b>Phần Thưởng</b> và <b>Hình Phạt</b> trên thanh công cụ để tăng tương tác.</span></li>
+                                 <li className="flex gap-3"><div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 font-bold text-sm">5</div> <span><strong>In Phiếu Bằng Cài Đặt:</strong> Có thể vào Cài đặt để tạo và In ngay một <b>Phiếu Học Tập A4</b> tự động dựa vào sheet vừa nhập.</span></li>
+                              </ul>
+                           </section>
+                           <section>
+                              <h4 className="text-xl font-bold text-white mb-4 border-l-4 border-yellow-500 pl-3">💡 5 Mẹo Tối Ưu Hóa Tiết Học</h4>
+                              <div className="grid gap-4">
+                                 <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
+                                    <h5 className="font-bold text-yellow-400 mb-1">1. "Cú Lừa" Hoàn Hảo</h5>
+                                    <p className="text-slate-300 text-sm">Sử dụng chế độ quay <em>"7. Cú lừa"</em>. Vòng quay sẽ giả vờ dừng lại ở 1 bạn, dừng khoảng 0.5s rồi đột ngột vút đi quay tiếp. Đây là chiêu trò tạo sự thót tim cực độ cho học sinh.</p>
+                                 </div>
+                                 <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
+                                    <h5 className="font-bold text-yellow-400 mb-1">2. Cá Nhân Hóa Cùng Học Sinh</h5>
+                                    <p className="text-slate-300 text-sm">Đầu năm học, hãy mở mục <b>Cài đặt Thưởng/Phạt</b> và cùng cả lớp thảo luận thống nhất các hình phạt hay phần quà. Việc để học sinh tự chốt luật chơi sẽ khiến các em tự giác tuân thủ hơn.</p>
+                                 </div>
+                                 <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
+                                    <h5 className="font-bold text-yellow-400 mb-1">3. Phao Cứu Sinh (Gợi ý)</h5>
+                                    <p className="text-slate-300 text-sm">Khi một học sinh bốc trúng câu hỏi khó và đứng hình, hãy nhấp vào <b>Icon Bóng đèn</b> góc trái để bung ra gợi ý (Cột C). Điều này giúp khích lệ tư duy học sinh một cách nhẹ nhàng.</p>
+                                 </div>
+                                 <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
+                                    <h5 className="font-bold text-yellow-400 mb-1">4. Vinh Danh Bằng Bảng Tổng Kết</h5>
+                                    <p className="text-slate-300 text-sm">Cuối tiết học, hãy mở <b>Bảng Tổng Kết</b> và bấm "Xuất Ảnh". Thầy có thể gửi bức ảnh này vào nhóm Zalo của Lớp để vinh danh những bạn tích cực lên bảng.</p>
+                                 </div>
+                                 <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
+                                    <h5 className="font-bold text-yellow-400 mb-1">5. Tận Dụng Tính Năng Trọng Số (Tỷ lệ)</h5>
+                                    <p className="text-slate-300 text-sm">Trong phần Cài đặt Hình Phạt, hãy để 1 ô <em>"Cộng 10 điểm (Quà ẩn)"</em> với tỷ lệ cực thấp (Ví dụ: Trọng số 1). Học sinh dù bốc trúng Hình Phạt nhưng vẫn có hy vọng mong manh trúng được Quà.</p>
+                                 </div>
+                              </div>
+                           </section>
+                       </div>
+                       <div className="p-6 border-t border-slate-800 bg-slate-900 text-center shrink-0">
+                           <button onClick={() => setShowHelp(false)} className="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-full transition-colors">Đã Hiểu</button>
+                       </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Màn Hình Hoàn Thành (Hết câu hỏi) */}
-              {appState === 'completed' && (
-                <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl animate-in fade-in duration-1000 p-4">
-                  <h1 className="text-4xl md:text-6xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 mb-12 text-center drop-shadow-[0_0_20px_rgba(236,72,153,0.5)] animate-bounce leading-tight">
-                    🎉 Chúc mừng các em đã hoàn thành <br/> bài học tuyệt vời này! 🎉
-                  </h1>
-                  
-                  {/* Hoa hướng dương nở rộ */}
-                  <div className="text-[150px] md:text-[250px] sunflower-bloom drop-shadow-[0_0_80px_rgba(250,204,21,0.5)] relative">
-                    🌻
-                    <div className="absolute inset-0 bg-yellow-400/20 blur-3xl rounded-full"></div>
+              {/* MÀN HÌNH XEM TRƯỚC IN ẤN PHIẾU HỌC TẬP (A4) */}
+              {showPrintPreview && (
+                <div className="min-h-screen bg-slate-800 print:bg-white pb-12 print:p-0 print:block">
+                  <div className="no-print bg-slate-900 border-b border-slate-700 p-4 sticky top-0 z-50 flex justify-between items-center shadow-xl">
+                     <h2 className="text-xl font-bold text-white flex items-center gap-2"><IconPrint /> Chế độ In Phiếu Học Tập</h2>
+                     
+                     {/* Bảng điều khiển cấu hình in */}
+                     <div className="flex items-center gap-4 bg-slate-800 px-4 py-2 rounded-lg border border-slate-700">
+                        <div className="flex items-center gap-2">
+                           <label className="text-slate-300 text-sm font-semibold">Font chữ:</label>
+                           <select 
+                              value={printFont} 
+                              onChange={(e) => setPrintFont(e.target.value)}
+                              className="bg-slate-900 text-white border border-slate-600 rounded px-2 py-1 text-sm outline-none focus:border-blue-500"
+                           >
+                              <option value="font-roboto">Roboto (Mặc định)</option>
+                              <option value="font-opensans">Open Sans</option>
+                              <option value="font-montserrat">Montserrat</option>
+                              <option value="font-nunito">Nunito</option>
+                              <option value="font-lora">Lora (Có chân)</option>
+                              <option value="font-merriweather">Merriweather (Có chân)</option>
+                           </select>
+                        </div>
+                        <div className="w-px h-6 bg-slate-700"></div>
+                        <div className="flex items-center gap-2">
+                           <label className="text-slate-300 text-sm font-semibold">Dòng kẻ làm bài:</label>
+                           <input 
+                              type="number" 
+                              min="0" max="10" 
+                              value={printLines} 
+                              onChange={(e) => setPrintLines(Number(e.target.value))}
+                              className="w-16 bg-slate-900 text-white border border-slate-600 rounded px-2 py-1 text-sm outline-none focus:border-blue-500 text-center"
+                           />
+                        </div>
+                     </div>
+
+                     <div className="flex gap-4">
+                        <button onClick={() => window.print()} className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-lg hover:scale-105 transition-all"><IconPrint /> In Phiếu (Ctrl+P)</button>
+                        <button onClick={() => setShowPrintPreview(false)} className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold flex items-center gap-2 shadow-lg hover:scale-105 transition-all"><IconX /> Đóng</button>
+                     </div>
                   </div>
 
-                  <button 
-                    onClick={() => setShowSettings(true)} 
-                    className="mt-16 px-10 py-5 bg-white/10 hover:bg-white/20 border-2 border-white/30 rounded-full text-white font-bold text-2xl backdrop-blur-sm transition-all hover:scale-110 shadow-[0_0_30px_rgba(255,255,255,0.1)] flex items-center gap-3"
-                  >
-                    <IconSettings /> Cài đặt bài học mới
-                  </button>
-                </div>
-              )}
-
-              {/* Header */}
-              <header className="relative z-10 flex items-center justify-between p-6 md:px-10 border-b border-slate-800 bg-slate-950/50 backdrop-blur-md">
-                <div className="flex items-center gap-4">
-                  {/* Logo VTL */}
-                  <div className="vtl-logo w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-blue-600 rounded-full border-2 border-white text-white font-black text-xl md:text-2xl tracking-tighter">
-                    VTL
-                  </div>
-                  <h1 className="text-2xl md:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                    Vòng quay Toán Thầy Lực
-                  </h1>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="hidden lg:block text-slate-500 text-base italic mr-4 border border-slate-800 px-4 py-2 rounded-full">Phím tắt: F (Toàn màn hình)</div>
-                  <button 
-                    onClick={() => setGiftModal({ show: true, status: 'menu', activeIndex: -1, finalGift: null })}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-orange-500 hover:from-pink-500 hover:to-orange-400 text-white rounded-xl transition-all shadow-lg shadow-pink-500/20 hover:shadow-pink-500/40 hover:-translate-y-0.5"
-                  >
-                    <IconGift />
-                    <span className="hidden sm:inline font-bold text-lg">Phần Thưởng</span>
-                  </button>
-                  <button 
-                    onClick={() => setShowSettings(true)}
-                    className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors border border-slate-700 font-medium text-lg"
-                  >
-                    <IconSettings />
-                    <span className="hidden sm:inline">Cài đặt</span>
-                  </button>
-                </div>
-              </header>
-
-              {/* Main Content */}
-              <main className={`flex-1 relative z-10 flex ${appState === 'presentation' ? 'flex-col lg:flex-row gap-8 items-stretch' : 'flex-col items-center justify-center'} p-4 md:p-6 lg:p-8`}>
-                
-                {appState === 'presentation' ? (
-                  <>
-                    <div className="w-full lg:w-3/4 bg-slate-900 border-2 border-blue-500/50 rounded-[3rem] shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col items-center p-10 md:p-16 relative pt-24 animate-in fade-in zoom-in-95 duration-500">
-                      
-                      {/* Bóng đèn Gợi Ý (nếu câu hỏi có gợi ý) */}
-                      {currentResult.questionData?.h && (
-                        <div className="absolute top-8 left-8 z-30 flex flex-col items-start">
-                          <button 
-                            onClick={() => setShowHint(!showHint)}
-                            className={`p-4 rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.6)] ${showHint ? 'bg-yellow-500 text-slate-900 scale-110 shadow-[0_0_30px_rgba(250,204,21,0.8)]' : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/40 hover:scale-110 animate-pulse'}`}
-                            title="Xem Gợi Ý"
-                          >
-                            <IconLightbulb />
-                          </button>
-                          
-                          {showHint && (
-                            <div className="mt-4 max-w-2xl md:max-w-4xl lg:max-w-5xl w-[90vw] bg-slate-800/95 border-2 border-yellow-500/50 p-8 rounded-3xl shadow-[0_0_40px_rgba(250,204,21,0.2)] animate-in fade-in slide-in-from-top-4 text-left backdrop-blur-md">
-                              <div className="text-yellow-400 font-bold mb-4 uppercase tracking-widest text-lg border-b border-yellow-500/30 pb-3 flex items-center gap-2">
-                                <IconLightbulb /> Gợi ý giải
-                              </div>
-                              <div className="text-white text-3xl md:text-4xl lg:text-5xl leading-relaxed">
-                                <MathText text={currentResult.questionData.h} />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex justify-center items-center">
-                        <LaurelWreath />
-                        <div className="relative z-10 w-36 h-36 md:w-40 md:h-40 bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-600 rounded-full flex items-center justify-center border-4 border-slate-900 shadow-2xl">
-                          <span className="text-6xl md:text-7xl font-black text-slate-900 drop-shadow-md">{currentResult.student}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex-1 w-full flex flex-col items-center justify-center text-center py-10 gap-16 overflow-y-auto custom-scroll">
-                        <div className="text-5xl md:text-7xl lg:text-8xl font-semibold leading-normal text-white w-full px-6">
-                          <MathText text={currentResult.questionData?.q || ''} />
-                        </div>
-                        
-                        {showAnswer && (
-                          <div className="text-5xl md:text-7xl lg:text-8xl font-bold text-green-400 animate-in slide-in-from-bottom-8 fade-in duration-500 w-full border-t border-slate-700/50 pt-16 px-6">
-                            <span className="text-slate-500 text-3xl uppercase tracking-widest font-black block mb-8">Đáp Án</span>
-                            <MathText text={currentResult.questionData?.a || ''} />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-12 flex gap-6 w-full max-w-2xl">
-                        {!showAnswer && (
-                          <button 
-                            onClick={() => setShowAnswer(true)} 
-                            className="flex-1 py-6 md:py-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-[2rem] font-bold text-3xl md:text-4xl transition-all shadow-[0_0_30px_rgba(59,130,246,0.4)] hover:-translate-y-2 text-white"
-                          >
-                            Xem Kết Quả
-                          </button>
-                        )}
-                        {showAnswer && (
-                          <button 
-                            onClick={handleContinue} 
-                            className="flex-1 py-6 md:py-8 bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 rounded-[2rem] font-bold text-3xl md:text-4xl transition-all text-white shadow-xl hover:-translate-y-2"
-                          >
-                            Tiếp Tục Quay
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="w-full lg:w-1/4 flex flex-col gap-6 animate-in slide-in-from-right-8 fade-in duration-500">
-                      <div className="bg-slate-900/80 backdrop-blur-md p-8 md:p-10 rounded-[3rem] border border-slate-800 flex flex-col gap-10 flex-1">
-                        <h3 className="text-3xl font-bold text-slate-300 text-center uppercase tracking-wider border-b border-slate-800 pb-6">Thống Kê</h3>
-                        <div className="flex flex-col gap-6">
-                          <div className="bg-slate-800/50 p-8 rounded-3xl text-center">
-                            <div className="text-xl text-slate-400 uppercase tracking-widest mb-3 font-semibold">Câu còn lại</div>
-                            <div className="text-7xl font-black text-yellow-400 drop-shadow-md">{poolQuestions.length}</div>
-                          </div>
-                          <div className="bg-slate-800/50 p-8 rounded-3xl text-center">
-                            <div className="text-xl text-slate-400 uppercase tracking-widest mb-3 font-semibold">Học sinh tổng</div>
-                            <div className="text-7xl font-black text-blue-400 drop-shadow-md">{settings.students}</div>
-                          </div>
-                        </div>
-                        <div className="mt-auto">
-                           <button onClick={handleContinue} className="w-full py-6 bg-slate-800 hover:bg-slate-700 rounded-2xl font-bold text-2xl flex items-center justify-center gap-3 transition-all border border-slate-600">
-                             <IconRefresh /> Về Trạng Thái Chờ
-                           </button>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : appState !== 'completed' && (
-                  <>
-                    <div className="w-full max-w-[98%] xl:max-w-[95%] 2xl:max-w-[90%] flex-1 min-h-[65vh] lg:min-h-[70vh] bg-slate-900 border-2 border-slate-800 rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col items-center justify-center mb-6 ring-1 ring-white/10">
-                      {appState === 'idle' && (
-                        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center">
-                          {/* Ảnh nền thay đổi ngẫu nhiên mang năng lượng tích cực */}
-                          <div className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-[30s] hover:scale-110" style={{ backgroundImage: `url('${idleBg}')` }}></div>
-                          {/* Lớp phủ tối để làm nổi bật chữ */}
-                          <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-[1px]"></div>
-                          
-                          <div className="relative z-20 text-center px-10 w-full flex flex-col items-center justify-center h-full">
-                            <h2 
-                              className="text-3xl md:text-5xl lg:text-6xl font-bold text-yellow-400 mb-10 leading-snug tracking-wide max-w-4xl mx-auto"
-                              style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0px 10px 20px rgba(0,0,0,0.8)' }}
-                            >
-                              "{idleQuote}"
-                            </h2>
-                            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-slate-900/60 border border-white/30 backdrop-blur-md shadow-[0_0_30px_rgba(0,0,0,0.6)] animate-pulse">
-                              <div className="w-4 h-4 rounded-full bg-green-400 animate-ping"></div>
-                              <p className="text-xl md:text-2xl text-white font-bold tracking-widest uppercase">Sẵn Sàng Quay Số</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {appState === 'spinning' && (
-                        <SpinEngine target={currentResult} mode={selectedMode} totalStudents={settings.students} totalQuestions={settings.questions} />
-                      )}
-
-                      {appState === 'result' && (
-                        <div className="text-center animate-in zoom-in duration-500">
-                          <div className="inline-block px-8 py-3 mb-8 rounded-full bg-blue-500/20 text-blue-300 text-xl md:text-2xl font-semibold border border-blue-500/30 uppercase tracking-widest">Người Được Chọn</div>
-                          <h2 className="text-[100px] md:text-[180px] lg:text-[220px] font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 drop-shadow-xl mb-8 leading-none">
-                            Học sinh {currentResult.student}
-                          </h2>
-                          <div className="text-5xl md:text-7xl lg:text-8xl font-bold text-slate-300 flex items-center justify-center gap-6 md:gap-8">
-                            <span className="text-slate-500">→</span>
-                            <span>Câu hỏi <span className="text-yellow-400">{currentResult.question}</span></span>
-                            <span className="text-slate-500">←</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Thanh công cụ đã được thu gọn lại */}
-                    <div className="w-full max-w-[98%] xl:max-w-[95%] 2xl:max-w-[90%] bg-slate-900/80 backdrop-blur-md p-4 md:p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-center gap-4 md:gap-6 justify-between">
-                      <div className="flex gap-8 text-center md:text-left">
-                        <div>
-                          <div className="text-base md:text-lg text-slate-400 mb-1">Tổng học sinh</div>
-                          <div className="text-3xl md:text-4xl font-bold text-blue-400">{settings.students} <span className="text-lg text-slate-600 font-normal">HS</span></div>
-                        </div>
-                        <div className="w-px bg-slate-700 hidden md:block"></div>
-                        <div>
-                          <div className="text-base md:text-lg text-slate-400 mb-1">Câu hỏi còn lại</div>
-                          <div className="text-3xl md:text-4xl font-bold text-yellow-400">{poolQuestions.length} <span className="text-lg text-slate-600 font-normal">Câu</span></div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-                        <div className="relative w-full sm:w-64">
-                          <select 
-                            value={selectedMode}
-                            onChange={(e) => setSelectedMode(e.target.value)}
-                            disabled={appState === 'spinning'}
-                            className="w-full appearance-none bg-slate-800 border border-slate-700 text-slate-200 py-3 pl-4 pr-10 text-lg rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 cursor-pointer"
-                          >
-                            {MODES.map(m => (
-                              <option key={m.id} value={m.id}>{m.name}</option>
-                            ))}
-                          </select>
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
-                        </div>
-
-                        <button
-                          onClick={handleSpin}
-                          disabled={appState === 'spinning' || poolQuestions.length === 0}
-                          className={`w-full sm:w-auto px-8 py-3 md:py-4 rounded-xl font-black text-xl md:text-2xl uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3
-                            ${appState === 'spinning' 
-                              ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
-                              : poolQuestions.length === 0
-                                ? 'bg-red-900/50 text-red-500 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] hover:-translate-y-1'
-                            }
-                          `}
-                        >
-                          {appState === 'spinning' ? <>Đang quay...</> : poolQuestions.length === 0 ? <>Hết câu hỏi</> : <><IconPlay /> Quay Số</>}
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </main>
-
-              {/* MODAL HỘP QUÀ BÍ ẨN - ĐÃ LÀM MỚI HIỂN THỊ DẠNG LƯỚI */}
-              {giftModal.show && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:p-8 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-                  <button onClick={() => setGiftModal({ show: false, status: 'menu', activeIndex: -1, finalGift: null })} className="absolute top-4 right-4 lg:top-8 lg:right-8 p-4 bg-slate-800/50 hover:bg-slate-700 rounded-full text-white/50 hover:text-white transition-colors z-50">
-                    <IconX />
-                  </button>
-
-                  <div className="flex flex-col items-center justify-center w-full max-w-7xl h-full">
-                    <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 mb-8 animate-pulse drop-shadow-lg text-center uppercase tracking-wider">
-                      🎁 Vòng Quay May Mắn 🎁
-                    </h2>
-                    
-                    {/* Lưới 8 phần quà, 4 cột 2 hàng, xếp vừa vặn */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 w-full px-2 max-h-[60vh] lg:max-h-[70vh]">
-                      {ALL_GIFTS.map((gift, idx) => {
-                        const isActive = giftModal.activeIndex === idx;
-                        const isWinner = giftModal.status === 'revealed' && giftModal.activeIndex === idx;
-                        const isLoser = giftModal.status === 'revealed' && giftModal.activeIndex !== idx;
-                        
-                        return (
-                          <div 
-                            key={gift.id} 
-                            className={`flex flex-col items-center justify-center p-4 lg:p-8 rounded-[2rem] transition-all duration-150 border-4 shadow-xl 
-                              ${isActive ? 'scale-110 border-yellow-400 bg-white shadow-[0_0_50px_rgba(250,204,21,0.8)] z-10' : 'border-white/10 bg-slate-800/80 scale-100'}
-                              ${isWinner ? 'animate-bounce border-green-400 shadow-[0_0_80px_rgba(74,222,128,1)]' : ''}
-                              ${isLoser ? 'opacity-30 grayscale scale-95' : ''}
-                            `}
-                          >
-                            <span className={`text-[60px] lg:text-[100px] leading-none mb-4 ${isWinner ? 'drop-shadow-2xl' : 'drop-shadow-lg'}`}>
-                              {gift.icon}
-                            </span>
-                            <span className={`text-center font-black text-lg lg:text-2xl px-2 ${isActive ? 'text-slate-900' : 'text-white'}`}>
-                              {gift.text}
-                            </span>
-                          </div>
-                        )
-                      })}
-                    </div>
-
-                    {/* Nút Điều Khiển Mâm Quay */}
-                    <div className="mt-12 lg:mt-16 h-32 flex flex-col items-center justify-center">
-                      {giftModal.status !== 'spinning' && (
-                        <button 
-                          onClick={handleSpinGift} 
-                          className="px-16 py-5 lg:py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-[2rem] font-black text-3xl lg:text-4xl text-white uppercase tracking-widest shadow-[0_0_30px_rgba(37,99,235,0.5)] hover:shadow-[0_0_50px_rgba(37,99,235,0.8)] hover:scale-110 transition-all border-4 border-white/20"
-                        >
-                          {giftModal.status === 'revealed' ? 'Quay Lại' : 'Bắt Đầu Quay'}
-                        </button>
-                      )}
-                      
-                      {giftModal.status === 'revealed' && giftModal.finalGift && (
-                        <div className="absolute bottom-10 bg-slate-900/90 border-2 border-yellow-500/50 px-10 py-4 rounded-full text-center text-yellow-400 text-2xl lg:text-4xl font-bold animate-in slide-in-from-bottom-8 shadow-[0_0_30px_rgba(250,204,21,0.3)]">
-                          Kết quả: <span className="text-white ml-2">{giftModal.finalGift.text}</span>
-                        </div>
-                      )}
-                    </div>
-
-                  </div>
-                </div>
-              )}
-
-              {/* MODAL CÀI ĐẶT TÍCH HỢP QUẢN LÝ THƯ VIỆN */}
-              {showSettings && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-                  <div className="bg-slate-900 border-2 border-slate-700 rounded-3xl w-full max-w-6xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                    <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950">
-                      <h3 className="text-3xl font-bold text-white flex items-center gap-3"><IconSettings /> Quản lý Bài Học</h3>
-                      <button onClick={() => setShowSettings(false)} className="text-slate-400 hover:text-white p-2 bg-slate-800 rounded-full transition-colors"><IconX /></button>
-                    </div>
-
-                    <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-2">
-                      
-                      {/* Cột trái: Form cấu hình hiện tại */}
-                      <div className="p-8 border-r border-slate-800 overflow-y-auto custom-scroll">
-                        <h4 className="text-xl font-semibold text-blue-400 mb-6 uppercase tracking-wider">Cấu hình Đang chạy</h4>
-                        <form onSubmit={handleApplySettings} className="space-y-6">
-                          <div>
-                            <label className="block text-base font-medium text-slate-400 mb-2">Tổng số học sinh (Không bị loại trừ)</label>
-                            <input type="number" name="students" value={localSettings.students} onChange={e => setLocalSettings({...localSettings, students: e.target.value})} min="1" max="999" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-xl text-white focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
-                          </div>
-                          <div>
-                            <label className="block text-base font-medium text-slate-400 mb-2">ID Google Sheet (Câu hỏi bài giảng)</label>
-                            <input type="text" name="sheetId" value={localSettings.sheetId} onChange={e => setLocalSettings({...localSettings, sheetId: e.target.value})} placeholder="Nhập ID từ URL Google Sheet..." className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-lg text-white focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-600" />
-                            <p className="text-xs text-slate-500 mt-2">Cột A: Câu hỏi | Cột B: Đáp án | Cột C: Gợi ý (Tuỳ chọn)</p>
-                          </div>
-                          {!localSettings.sheetId && (
-                            <div>
-                              <label className="block text-base font-medium text-slate-400 mb-2">Số lượng câu hỏi mặc định (Sinh tự động)</label>
-                              <input type="number" name="questions" value={localSettings.questions} onChange={e => setLocalSettings({...localSettings, questions: e.target.value})} min="1" max="999" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-xl text-white focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
-                            </div>
-                          )}
-
-                          {/* Khu vực lưu bài học hiện tại */}
-                          <div className="mt-8 p-6 bg-blue-900/10 border border-blue-800/30 rounded-2xl">
-                             <h5 className="text-blue-300 font-medium mb-4 flex items-center gap-2"><IconSave /> Lưu nhanh ID hiện tại vào Thư Viện</h5>
-                             <div className="flex flex-col gap-3">
-                                <input type="text" placeholder="Tên bài (VD: Ôn tập hàm số)" value={saveForm.name} onChange={e => setSaveForm({...saveForm, name: e.target.value})} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500" />
-                                <div className="flex gap-3">
-                                   <select value={saveForm.grade} onChange={e => setSaveForm({...saveForm, grade: e.target.value})} className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none w-1/3">
-                                      {GRADES.map(g => <option key={g} value={g}>Khối {g}</option>)}
-                                   </select>
-                                   <button type="button" onClick={handleSaveToLibrary} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold py-2 transition-colors">Lưu Bài</button>
-                                </div>
-                             </div>
-                          </div>
-
-                          <div className="pt-6 mt-6 border-t border-slate-800">
-                            <button type="submit" className="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold text-xl hover:from-green-500 hover:to-emerald-500 transition-colors shadow-lg shadow-green-500/20">Áp Dụng & Tải Bài Giảng</button>
-                          </div>
-                        </form>
-                      </div>
-
-                      {/* Cột phải: Cây Thư Viện Bài Học */}
-                      <div className="p-8 bg-slate-950/50 overflow-y-auto custom-scroll">
-                        <h4 className="text-xl font-semibold text-yellow-400 mb-6 uppercase tracking-wider">Thư viện Bài Học (Lưu trữ)</h4>
-                        
-                        {savedSheets.length === 0 ? (
-                           <div className="text-center text-slate-500 py-10 border-2 border-dashed border-slate-800 rounded-2xl">
-                              <IconFolder isOpen={false} />
-                              <p className="mt-4">Chưa có bài học nào được lưu.</p>
+                  {/* A4 Paper Container */}
+                  <div className={`mx-auto mt-8 bg-white text-black p-[20mm] print:p-[10mm] shadow-2xl print:shadow-none w-[210mm] min-h-[297mm] print:w-full print:max-w-full print:min-h-0 print:m-0 box-border print:block ${printFont}`}>
+                     <div className="text-center mb-8 border-b-2 border-black pb-4">
+                        <h1 className="text-2xl font-bold uppercase mb-4 tracking-widest">Phiếu Học Tập</h1>
+                        <div className="flex justify-between items-end text-base font-semibold w-full px-2">
+                           <div className="flex gap-2 w-[45%]">
+                              <span className="whitespace-nowrap">Chủ đề:</span>
+                              <div className="border-b border-dotted border-black flex-1"></div>
                            </div>
-                        ) : (
-                           <div className="flex flex-col gap-2">
-                             {GRADES.map(grade => {
-                                const sheetsInGrade = savedSheets.filter(s => s.grade === grade);
-                                if (sheetsInGrade.length === 0) return null;
-                                const isOpen = expandedGrades[grade];
-                                
-                                return (
-                                   <div key={grade} className="bg-slate-800/40 rounded-xl border border-slate-700/50 overflow-hidden transition-all">
-                                      {/* Header của Khối */}
-                                      <button 
-                                        onClick={() => toggleGradeTree(grade)} 
-                                        className={`w-full flex items-center gap-3 px-5 py-4 text-left font-bold transition-colors ${isOpen ? 'bg-slate-800 text-yellow-400' : 'hover:bg-slate-800 text-slate-300'}`}
-                                      >
-                                         <IconFolder isOpen={isOpen} /> 
-                                         <span className="text-lg">Khối {grade}</span>
-                                         <span className="ml-auto text-xs bg-slate-900 px-2 py-1 rounded-full text-slate-400">{sheetsInGrade.length} bài</span>
-                                      </button>
-                                      
-                                      {/* Danh sách File bài học */}
-                                      {isOpen && (
-                                         <div className="p-3 bg-slate-900/50 flex flex-col gap-2">
-                                            {sheetsInGrade.map(sheet => (
-                                               <div key={sheet.id} className={`flex items-center justify-between p-3 rounded-lg border border-slate-700/50 transition-all ${localSettings.sheetId === sheet.id ? 'bg-blue-600/20 border-blue-500/50' : 'bg-slate-800 hover:bg-slate-700'}`}>
-                                                  <div 
-                                                    className="flex items-center gap-3 flex-1 cursor-pointer"
-                                                    onClick={() => handleLoadSavedSheet(sheet.id)}
-                                                  >
-                                                     <div className={localSettings.sheetId === sheet.id ? 'text-blue-400' : 'text-slate-400'}><IconFile /></div>
-                                                     <div className="flex flex-col">
-                                                        <span className={`font-medium ${localSettings.sheetId === sheet.id ? 'text-blue-300' : 'text-slate-200'}`}>{sheet.name}</span>
-                                                     </div>
-                                                  </div>
-                                                  <button 
-                                                    onClick={() => handleDeleteSavedSheet(sheet.id)}
-                                                    className="p-2 bg-slate-900 rounded-lg hover:bg-red-500/20 transition-colors ml-3"
-                                                    title="Xoá bài học này"
-                                                  >
-                                                     <IconTrash />
-                                                  </button>
-                                               </div>
-                                            ))}
-                                         </div>
-                                      )}
-                                   </div>
-                                );
-                             })}
+                           <div className="flex gap-2 w-[50%]">
+                              <span className="whitespace-nowrap">Họ tên:</span>
+                              <div className="border-b border-dotted border-black flex-1"></div>
+                              <span className="whitespace-nowrap ml-4">Lớp:</span>
+                              <div className="border-b border-dotted border-black w-24"></div>
                            </div>
-                        )}
-                      </div>
+                        </div>
+                     </div>
 
-                    </div>
+                     <div className="grid grid-cols-2 gap-x-6 gap-y-8 text-[12pt] print:text-[12pt] w-full max-w-full">
+                        {allQuestions.map(q => (
+                           <div key={q.id} className="print-break-inside-avoid text-left break-inside-avoid w-full break-words overflow-hidden">
+                              <div className="mb-2 text-left leading-relaxed">
+                                 <span className="font-bold">Câu {q.id}: </span>
+                                 <span className="font-normal"><MathText text={q.q} /></span>
+                              </div>
+                              {/* Tự động render số dòng kẻ chấm mờ theo cấu hình */}
+                              <div className="flex flex-col gap-0 mt-2">
+                                 {Array.from({length: printLines}).map((_, i) => (
+                                    <div key={i} className="border-b border-dotted border-gray-500 h-7 w-full"></div>
+                                 ))}
+                              </div>
+                           </div>
+                        ))}
+                     </div>
                   </div>
                 </div>
               )}
-            </div>
+            </>
           );
         }
 
         // ==========================================
-        // COMPONENT ANIMATION QUAY SỐ
+        // COMPONENT ANIMATION QUAY SỐ (HIỆU ỨNG TÌM NGƯỜI)
+        // ==========================================
+        function SpinStudentEngine({ targetStudent, totalStudents }) {
+          const [displayS, setDisplayS] = useState('...');
+          const [visualState, setVisualState] = useState('');
+          
+          useEffect(() => {
+              let isActive = true;
+              const runAnimation = async () => {
+                  const duration = 3800;
+                  const startTime = Date.now();
+                  let delay = 30;
+                  
+                  while (Date.now() - startTime < duration - 200 && isActive) {
+                      setDisplayS(randomInt(1, totalStudents));
+                      setVisualState(randomColor() + ' scale-110');
+                      await sleep(delay);
+                      
+                      const elapsed = Date.now() - startTime;
+                      if (elapsed > 1500) delay = 80;
+                      if (elapsed > 2500) delay = 150;
+                      setVisualState(randomColor() + ' scale-100');
+                  }
+                  
+                  if (isActive) {
+                      setDisplayS(targetStudent);
+                      setVisualState('text-white scale-125 transition-all duration-300');
+                  }
+              };
+              runAnimation();
+              return () => { isActive = false; };
+          }, [targetStudent, totalStudents]);
+
+          return (
+              <div className={`text-center transition-all duration-100 flex flex-col items-center justify-center w-full h-full ${visualState}`}>
+                <div className="text-4xl md:text-6xl text-slate-400 mb-8 tracking-widest uppercase font-semibold">Đang tìm người trả lời...</div>
+                <div className="text-[150px] md:text-[280px] lg:text-[350px] font-black leading-none mb-8">{displayS}</div>
+              </div>
+          );
+        }
+
+        // ==========================================
+        // COMPONENT ANIMATION QUAY SỐ (GỐC)
         // ==========================================
         function SpinEngine({ target, mode, totalStudents, totalQuestions }) {
           const [displayData, setDisplayData] = useState({ s: '...', q: '...' });
@@ -1073,4 +1593,4 @@
         root.render(<App />);
     </script>
 </body>
-</html>S
+</html>
