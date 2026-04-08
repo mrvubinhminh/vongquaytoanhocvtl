@@ -442,27 +442,50 @@
             
             if (sheetId) {
               try {
-                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+                let actualId = sheetId.trim();
+                // Tự động lấy ID nếu người dùng lỡ dán cả đường link
+                if (actualId.includes('/d/')) {
+                  const match = actualId.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                  if (match) actualId = match[1];
+                }
+
+                const url = `https://docs.google.com/spreadsheets/d/${actualId}/export?format=csv`;
                 const res = await fetch(url);
+                
+                if (!res.ok) throw new Error(`Lỗi tải file (${res.status}). Vui lòng kiểm tra lại link/ID.`);
+                
                 const text = await res.text();
+                
+                // Trả về trang đăng nhập HTML -> lỗi chưa share public
+                if (text.trim().startsWith('<') && text.toLowerCase().includes('html')) {
+                  throw new Error("Google Sheet của bạn chưa được cấp quyền! Vui lòng chọn 'Bất kỳ ai có liên kết' (Anyone with the link) ở mục Chia sẻ.");
+                }
+
                 const data = parseCSV(text);
+                if (!data || data.length === 0) throw new Error("Sheet không có dữ liệu.");
+
                 let startIndex = (data[0] && data[0][0] && data[0][0].toLowerCase().includes('câu')) ? 1 : 0;
                 const qs = [];
-                for(let i=startIndex; i<data.length; i++) {
-                   if(data[i][0]) qs.push({ 
-                       id: i + 1 - startIndex, 
-                       q: data[i][0], 
-                       a: data[i][1] || '(Không có đáp án)', 
-                       h: data[i][2] || '',
-                       sub: data[i][3] || '' 
-                   });
+                for(let i = startIndex; i < data.length; i++) {
+                   // Bỏ qua các hàng rỗng
+                   if(data[i] && data[i][0] && data[i][0].toString().trim() !== '') {
+                       qs.push({ 
+                           id: i + 1 - startIndex, 
+                           q: data[i][0], 
+                           a: data[i][1] || '(Không có đáp án)', 
+                           h: data[i][2] || '',
+                           sub: data[i][3] || '' 
+                       });
+                   }
                 }
-                if (qs.length === 0) throw new Error("Sheet rỗng");
+                
+                if (qs.length === 0) throw new Error("Không tìm thấy câu hỏi nào hợp lệ trong Sheet.");
+                
                 setPoolQuestions(qs);
                 setAllQuestions(qs);
               } catch(e) {
                 console.error("Lỗi Google Sheet:", e);
-                alert("Lỗi tải Google Sheet. Đang sử dụng câu hỏi mặc định.");
+                alert(`⚠️ LỖI TẢI BÀI HỌC:\n${e.message}\n\nĐang sử dụng bộ câu hỏi mặc định.`);
                 const fallbackQs = Array.from({ length: questionCount }, (_, i) => ({ id: i + 1, q: `Câu hỏi mặc định số ${i + 1}`, a: `Đáp án ${i + 1}` }));
                 setPoolQuestions(fallbackQs);
                 setAllQuestions(fallbackQs);
@@ -490,9 +513,17 @@
             if (e) e.preventDefault();
             const s = parseInt(localSettings.students);
             const q = parseInt(localSettings.questions || 20);
-            const sId = (localSettings.sheetId || '').trim();
+            let sId = (localSettings.sheetId || '').trim();
+            
+            // Extract ID from full URL automatically
+            if (sId.includes('/d/')) {
+                const match = sId.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (match) sId = match[1];
+            }
+
             if (s > 0 && q > 0) {
               setSettings({ ...localSettings, students: s, questions: q, sheetId: sId });
+              setLocalSettings({ ...localSettings, sheetId: sId }); // Update local setting with cleaned ID
               setShowSettings(false);
             }
           };
@@ -523,7 +554,11 @@
           };
 
           const handleSaveToLibrary = () => {
-            const currentId = (localSettings.sheetId || '').trim();
+            let currentId = (localSettings.sheetId || '').trim();
+            if (currentId.includes('/d/')) {
+                const match = currentId.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (match) currentId = match[1];
+            }
             if (!currentId) return alert('Vui lòng nhập ID Google Sheet trước khi lưu!');
             if (!saveForm.name.trim()) return alert('Vui lòng nhập Tên bài học!');
             
@@ -538,6 +573,7 @@
             setSavedSheets(prev => [...prev.filter(s => s.id !== currentId), newSheet]);
             setSaveForm(prev => ({ ...prev, name: '' }));
             setExpandedGrades(prev => ({...prev, [saveForm.grade]: true}));
+            setLocalSettings(prev => ({ ...prev, sheetId: currentId }));
           };
 
           const handleDeleteSavedSheet = (id) => {
@@ -641,7 +677,6 @@
             }
           };
 
-          // --- QUAY HỘP QUÀ/PHẠT BÍ ẨN ---
           const handleOpenSpecificGift = async (boxIndex) => {
             if (giftModal.status !== 'menu') return;
 
@@ -1031,7 +1066,7 @@
 
                       <div className="mt-8 lg:mt-10 h-24 flex flex-col items-center justify-center relative w-full">
                         {(giftModal.status === 'menu' || giftModal.status === 'revealed') && (
-                          <button onClick={handleSpinGift} className={`px-12 py-4 lg:py-5 bg-gradient-to-r hover:scale-110 transition-all border-4 border-white/20 z-20 rounded-[2rem] font-black text-2xl lg:text-3xl text-white uppercase tracking-widest ${giftModal.type === 'reward' ? 'from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-[0_0_30px_rgba(37,99,235,0.5)] hover:shadow-[0_0_50px_rgba(37,99,235,0.8)]' : 'from-red-800 to-stone-900 hover:from-red-700 hover:to-stone-800 shadow-[0_0_30px_rgba(153,27,27,0.5)] hover:shadow-[0_0_50px_rgba(153,27,27,0.8)]'}`}>
+                          <button onClick={handleSpinGift} className={`px-12 py-4 lg:py-5 bg-gradient-to-r hover:scale-110 transition-all border-4 border-white/20 z-20 rounded-[2rem] font-black text-2xl lg:text-3xl text-white uppercase tracking-widest ${giftModal.type === 'reward' ? 'from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-[0_0_30px_rgba(37,99,235,0.5)] hover:shadow-[0_0_50px_rgba(37,99,235,0.8)]' : 'from-red-800 to-stone-900 hover:from-red-700 hover:to-stone-800 shadow-[0_0_30px_rgba(153,27,27,0.5)] hover:shadow-[0_0_30px_rgba(153,27,27,0.8)]'}`}>
                             {giftModal.status === 'revealed' ? 'Quay Lại' : 'Hoặc Quay Ngẫu Nhiên'}
                           </button>
                         )}
@@ -1371,7 +1406,7 @@
 
                      <div className="grid grid-cols-2 gap-x-6 gap-y-8 text-[12pt] print:text-[12pt] w-full max-w-full">
                         {allQuestions.map(q => (
-                           <div key={q.id} className="print-break-inside-avoid text-left break-inside-avoid w-full break-words overflow-hidden">
+                           <div key={q.id} className="print-break-inside-avoid text-left break-inside-avoid w-full overflow-hidden">
                               <div className="mb-2 text-left leading-relaxed">
                                  <span className="font-bold">Câu {q.id}: </span>
                                  <span className="font-normal"><MathText text={q.q} /></span>
